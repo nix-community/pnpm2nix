@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "argparse": "^1.0.9",
+    "imagemagick-native": "^1.9.3",
     "pkcs11js": "^1.0.13"
   }
 }

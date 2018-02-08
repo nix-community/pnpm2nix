@@ -28,7 +28,7 @@ in {
     src,
     packageJSON ? src + "/package.json",
     shrinkwrapYML ? src + "/shrinkwrap.yaml",
-    extraBuildInputs ? [],
+    extraBuildInputs ? {},
   }:
     let
       package = lib.importJSON packageJSON;
@@ -70,7 +70,8 @@ in {
           "${shaType}" = shaSum;
         };
 
-        buildInputs = [ nodejs python2 ];
+        buildInputs = [ nodejs python2 ]
+          ++ lib.optionals (lib.hasAttr pname extraBuildInputs) (lib.getAttr pname extraBuildInputs);
 
         configurePhase = ''
           runHook preConfigure

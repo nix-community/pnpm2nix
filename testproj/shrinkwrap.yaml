@@ -1,5 +1,6 @@
 dependencies:
   argparse: 1.0.9
+  imagemagick-native: 1.9.3
   pkcs11js: 1.0.13
 packages:
   /argparse/1.0.9:
@@ -8,6 +9,14 @@ packages:
     dev: false
     resolution:
       integrity: sha1-c9g7wmP4bpf4zE9rrhsOkKfSLIY=
+  /imagemagick-native/1.9.3:
+    dependencies:
+      nan: 2.8.0
+    dev: false
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-cS+UPTDF2vbcXYgZj0yfHmy5At8=
   /nan/2.8.0:
     dev: false
     resolution:
@@ -27,4 +36,5 @@ shrinkwrapMinorVersion: 4
 shrinkwrapVersion: 3
 specifiers:
   argparse: ^1.0.9
+  imagemagick-native: ^1.9.3
   pkcs11js: ^1.0.13

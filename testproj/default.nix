@@ -6,4 +6,7 @@ mkPnpmPackage {
   # These default to src/package.json & src/shrinkwrap.yaml
   packageJSON = ./package.json;
   shrinkwrapYML = ./shrinkwrap.yaml;
+  extraBuildInputs = {
+    imagemagick-native = [ pkgs.imagemagick ];
+  };
 }

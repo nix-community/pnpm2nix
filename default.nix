@@ -1,7 +1,7 @@
 { pkgs ? import <nixpkgs> {}
 , python2 ? pkgs.python2
-, nodejs ? pkgs.nodejs
-, nodePackages_8_x ? pkgs.nodePackages_8_x
+, nodejs ? pkgs.nodejs-8_x
+, nodePackages ? pkgs.nodePackages_8_x
 , pnpm ? pkgs.nodePackages_8_x.pnpm
 }:
 
@@ -100,7 +100,7 @@ in {
           if ${hasScript "install"}; then
             npm run-script install
           elif [ -f ./binding.gyp ]; then
-            ${nodePackages_8_x.node-gyp}/bin/node-gyp rebuild
+            ${nodePackages.node-gyp}/bin/node-gyp rebuild
           fi
 
           if ${hasScript "postinstall"}; then

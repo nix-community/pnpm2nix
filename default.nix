@@ -15,7 +15,7 @@ let
     ${pkgs.callPackage ./yml2json { }}/bin/yaml2json < ${shrinkwrapYML} | ${pkgs.jq}/bin/jq -a '.' > $out/shrinkwrap.json
   '').outPath + "/shrinkwrap.json"));
 
-  hasScript = scriptName: "test `jq '.scripts | has(\"${scriptName}\")' < package.json` = true";
+  hasScript = scriptName: "test `${pkgs.jq}/bin/jq '.scripts | has(\"${scriptName}\")' < package.json` = true";
 
   nodeSources = pkgs.runCommand "node-sources" {} ''
     tar --no-same-owner --no-same-permissions -xf ${nodejs.src}
@@ -81,6 +81,12 @@ in {
         buildPhase = ''
           runHook preBuild
 
+          # node-gyp writes to HOME
+          export HOME="$TEMPDIR"
+
+          # Prevent gyp from going online (no matter if invoked by us or by package.json)
+          export npm_config_nodedir=${nodeSources}
+
           # Link dependencies into node_modules
           mkdir node_modules
           ${lib.concatStringsSep "\n" (map (dep: "ln -s ${dep} node_modules/${dep.pname}") innerDeps)}
@@ -93,7 +99,7 @@ in {
           if ${hasScript "install"}; then
             npm run-script install
           elif [ -f ./binding.gyp ]; then
-            ${nodePackages_8_x.node-gyp}/bin/node-gyp --nodedir=${nodeSources} rebuild
+            ${nodePackages_8_x.node-gyp}/bin/node-gyp rebuild
           fi
 
           if ${hasScript "postinstall"}; then

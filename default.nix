@@ -12,7 +12,7 @@ let
 
   jsonFile = name: shrinkwrapYML: (lib.importJSON ((pkgs.runCommandNoCC name {} ''
     mkdir -p $out
-    ${pkgs.callPackage ./yml2json { }}/bin/yaml2json < ${shrinkwrapYML} > $out/shrinkwrap.json
+    ${pkgs.callPackage ./yml2json { }}/bin/yaml2json < ${shrinkwrapYML} | ${pkgs.jq}/bin/jq -a '.' > $out/shrinkwrap.json
   '').outPath + "/shrinkwrap.json"));
 
   hasScript = scriptName: "test `jq '.scripts | has(\"${scriptName}\")' < package.json` = true";

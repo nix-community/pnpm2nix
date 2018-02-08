@@ -15,6 +15,12 @@ let
     ${pkgs.callPackage ./yml2json { }}/bin/yaml2json < ${shrinkwrapYML} > $out/shrinkwrap.json
   '').outPath + "/shrinkwrap.json"));
 
+  hasScript = scriptName: "test `jq '.scripts | has(\"${scriptName}\")' < package.json` = true";
+
+  nodeSources = pkgs.runCommand "node-sources" {} ''
+    tar --no-same-owner --no-same-permissions -xf ${nodejs.src}
+    mv node-* $out
+  '';
 
 in {
 
@@ -30,7 +36,7 @@ in {
       version = package.version;
       name = pname + "-" + version;
 
-      shrinkwrap = jsonFile "shrinkwrap" shrinkwrapYML;
+      shrinkwrap = jsonFile "${pname}-shrinkwrap-${version}" shrinkwrapYML;
 
       modules = with lib;
         (listToAttrs (map (drv: nameValuePair drv.pkgName drv)
@@ -69,10 +75,6 @@ in {
         configurePhase = ''
           runHook preConfigure
 
-          if test -f ./binding.gyp; then
-            ${nodePackages_8_x.node-gyp}/bin/node-gyp configure
-          fi
-
           runHook postConfigure
         '';
 
@@ -83,7 +85,20 @@ in {
           mkdir node_modules
           ${lib.concatStringsSep "\n" (map (dep: "ln -s ${dep} node_modules/${dep.pname}") innerDeps)}
 
-          npm build
+          if ${hasScript "preinstall"}; then
+            npm run-script preinstall
+          fi
+
+          # If there is a binding.gyp file and no "install" script "install" defaults to "node-gyp rebuild"
+          if ${hasScript "install"}; then
+            npm run-script install
+          elif [ -f ./binding.gyp ]; then
+            ${nodePackages_8_x.node-gyp}/bin/node-gyp --nodedir=${nodeSources} rebuild
+          fi
+
+          if ${hasScript "postinstall"}; then
+            npm run-script postinstall
+          fi
 
           runHook postBuild
         '';
@@ -126,8 +141,6 @@ in {
         # Link dependencies into node_modules
         mkdir node_modules
         ${lib.concatStringsSep "\n" (map (dep: "ln -s ${dep} node_modules/${dep.pname}") deps)}
-
-        npm build
 
         runHook postBuild
       '';

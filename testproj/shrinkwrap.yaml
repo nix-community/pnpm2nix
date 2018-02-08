@@ -1,5 +1,6 @@
 dependencies:
   argparse: 1.0.9
+  pkcs11js: 1.0.13
 packages:
   /argparse/1.0.9:
     dependencies:
@@ -7,6 +8,16 @@ packages:
     dev: false
     resolution:
       integrity: sha1-c9g7wmP4bpf4zE9rrhsOkKfSLIY=
+  /nan/2.8.0:
+    dev: false
+    resolution:
+      integrity: sha1-7XFfP+neArV6XmJS2QqWZ14fCFo=
+  /pkcs11js/1.0.13:
+    dependencies:
+      nan: 2.8.0
+    dev: false
+    resolution:
+      integrity: sha512-8qhUAscCasYmXx2xR8V413dZa7TvzHw6844wRssnTW2VzwqHKLYs7j7ZawT6vZ2wEef8j/zEHYvGFTCGdIshHw==
   /sprintf-js/1.0.3:
     dev: false
     resolution:
@@ -16,3 +27,4 @@ shrinkwrapMinorVersion: 4
 shrinkwrapVersion: 3
 specifiers:
   argparse: ^1.0.9
+  pkcs11js: ^1.0.13

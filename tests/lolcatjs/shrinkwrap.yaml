@@ -1,0 +1,127 @@
+dependencies:
+  ansi: 0.3.1
+  chalk: 2.3.0
+  line-by-line: 0.1.6
+  minimist: 1.2.0
+  multiline: 1.0.2
+  supports-color: 5.1.0
+optionalDependencies:
+  sleep: 5.1.1
+packages:
+  /ansi-styles/3.2.0:
+    dependencies:
+      color-convert: 1.9.1
+    dev: false
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha512-NnSOmMEYtVR2JVMIGTzynRkkaxtiq1xnFBcdQD/DnNCYPoEPsVJhM98BDyaoNOQIi7p4okdi3E27eN7GQbsUug==
+  /ansi/0.3.1:
+    dev: false
+    resolution:
+      integrity: sha1-DELU+xcWDVqa8eSEus4cZpIsGyE=
+  /chalk/2.3.0:
+    dependencies:
+      ansi-styles: 3.2.0
+      escape-string-regexp: 1.0.5
+      supports-color: 4.5.0
+    dev: false
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha512-Az5zJR2CBujap2rqXGaJKaPHyJ0IrUimvYNX+ncCy8PJP4ltOGTrHUIo097ZaL2zMeKYpiCdqDvS6zdrTFok3Q==
+  /color-convert/1.9.1:
+    dependencies:
+      color-name: 1.1.3
+    dev: false
+    resolution:
+      integrity: sha512-mjGanIiwQJskCC18rPR6OmrZ6fm2Lc7PeGFYwCmy5J34wC6F1PzdGL6xeMfmgicfYcNLGuVFA3WzXtIDCQSZxQ==
+  /color-name/1.1.3:
+    dev: false
+    resolution:
+      integrity: sha1-p9BVi9icQveV3UIyj3QIMcpTvCU=
+  /escape-string-regexp/1.0.5:
+    dev: false
+    engines:
+      node: '>=0.8.0'
+    resolution:
+      integrity: sha1-G2HAViGQqN/2rjuyzwIAyhMLhtQ=
+  /get-stdin/4.0.1:
+    dev: false
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-uWjGsKBDhDJJAui/Gl3zJXmkUP4=
+  /has-flag/2.0.0:
+    dev: false
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-6CB68cx7MNRGzHC3NLXovhj4jVE=
+  /line-by-line/0.1.6:
+    dev: false
+    engines:
+      node: '>=4.0.0'
+    resolution:
+      integrity: sha512-MmwVPfOyp0lWnEZ3fBA8Ah4pMFvxO6WgWovqZNu7Y4J0TNnGcsV4S1LzECHbdgqk1hoHc2mFP1Axc37YUqwafg==
+  /minimist/1.2.0:
+    dev: false
+    resolution:
+      integrity: sha1-o1AIsg9BOD7sH7kU9M1d95omQoQ=
+  /multiline/1.0.2:
+    dependencies:
+      strip-indent: 1.0.1
+    dev: false
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-abHyX/B00oKJBPJE3dBrfZbvbJM=
+  /nan/2.8.0:
+    dev: false
+    optional: true
+    resolution:
+      integrity: sha1-7XFfP+neArV6XmJS2QqWZ14fCFo=
+  /sleep/5.1.1:
+    dependencies:
+      nan: 2.8.0
+    dev: false
+    engines:
+      node: '>=0.8.0'
+    optional: true
+    resolution:
+      integrity: sha1-h4+h1E0I7rDyb7IBjvhinrGjq5Q=
+  /strip-indent/1.0.1:
+    dependencies:
+      get-stdin: 4.0.1
+    dev: false
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-DHlipq3vp7vUrDZkYKY4VSrhoKI=
+  /supports-color/4.5.0:
+    dependencies:
+      has-flag: 2.0.0
+    dev: false
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha1-vnoN5ITexcXN34s9WRJQRJEvY1s=
+  /supports-color/5.1.0:
+    dependencies:
+      has-flag: 2.0.0
+    dev: false
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha512-Ry0AwkoKjDpVKK4sV4h6o3UJmNRbjYm2uXhwfj3J56lMVdvnUNqzQVRztOOMGQ++w1K/TjNDFvpJk0F/LoeBCQ==
+registry: 'https://registry.npmjs.org/'
+shrinkwrapMinorVersion: 4
+shrinkwrapVersion: 3
+specifiers:
+  ansi: ^0.3.0
+  chalk: ^2.1.0
+  line-by-line: ^0.1.3
+  minimist: ^1.1.1
+  multiline: ^1.0.2
+  sleep: ^5.0.0
+  supports-color: ^5.0.0

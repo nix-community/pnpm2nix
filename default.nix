@@ -15,7 +15,7 @@ let
     ${pkgs.callPackage ./yml2json { }}/bin/yaml2json < ${shrinkwrapYML} | ${pkgs.jq}/bin/jq -a '.' > $out/shrinkwrap.json
   '').outPath + "/shrinkwrap.json"));
 
-  hasScript = scriptName: "test `${pkgs.jq}/bin/jq '.scripts | has(\"${scriptName}\")' < package.json` = true";
+  hasScript = scriptName: "test `jq '.scripts | has(\"${scriptName}\")' < package.json` = true";
 
   nodeSources = pkgs.runCommand "node-sources" {} ''
     tar --no-same-owner --no-same-permissions -xf ${nodejs.src}
@@ -24,28 +24,28 @@ let
 
   mkPnpmDerivation = deps: attrs: stdenv.mkDerivation (attrs //  {
 
-    buildInputs = [ nodejs python2 ]
+    buildInputs = [ nodejs python2 pkgs.jq ]
       ++ lib.optionals (lib.hasAttr "buildInputs" attrs) attrs.buildInputs;
 
     configurePhase = ''
       runHook preConfigure
 
+      # Because of the way the bin directive works, specifying both a bin path and setting directories.bin is an error
+      if test `jq '(.directories | has("bin")) and has("bin")' < package.json` = true; then
+        echo "package.json had both bin and directories.bin (see https://docs.npmjs.com/files/package.json#directoriesbin)"
+        exit 1
+      fi
+
       # node-gyp writes to $HOME
       export HOME="$TEMPDIR"
-
-      # Prevent gyp from going online (no matter if invoked by us or by package.json)
-      export npm_config_nodedir=${nodeSources}
-
-      runHook postConfigure
-    '';
-
-    buildPhase = ''
-      runHook preBuild
 
       if [[ -d node_modules || -L node_modules ]]; then
         echo "./node_modules is present. Removing."
         rm -rf node_modules
       fi
+
+      # Prevent gyp from going online (no matter if invoked by us or by package.json)
+      export npm_config_nodedir=${nodeSources}
 
       # Link dependencies into node_modules
       mkdir node_modules
@@ -54,6 +54,12 @@ let
       if ${hasScript "preinstall"}; then
         npm run-script preinstall
       fi
+
+      runHook postConfigure
+    '';
+
+    buildPhase = ''
+      runHook preBuild
 
       # If there is a binding.gyp file and no "install" or "preinstall" script in package.json "install" defaults to "node-gyp rebuild"
       if ${hasScript "install"}; then
@@ -77,6 +83,22 @@ let
       mkdir -p $out
       cp -a * $out/
 
+      cd $out
+      # Create bin outputs
+      mkdir -p bin
+      if test `jq 'has("bin")' < package.json` = true; then
+        jq -r '.bin | to_entries | map("ln -s $(readlink -f \(.value)) bin/\(.key) && chmod +x bin/\(.key)") | .[]' < package.json | while read l; do
+          eval "$l"
+        done
+      fi
+      if test $(jq '.directories | has("bin")' < package.json) = "true"; then
+        for f in $(jq -r '.directories.bin' < package.json)/*; do
+          ln -s `readlink -f "$f"` bin/
+          chmod +x "bin/$f"
+        done
+      fi
+      cd -
+
       runHook postInstall
       '';
   });
@@ -90,8 +112,8 @@ in {
     shrinkwrapYML ? src + "/shrinkwrap.yaml",
     extraBuildInputs ? {},
   }:
-    let
-      package = lib.importJSON packageJSON;
+  let
+    package = lib.importJSON packageJSON;
       pname = package.name;
       version = package.version;
       name = pname + "-" + version;
@@ -132,18 +154,17 @@ in {
         buildInputs = if (lib.hasAttr pname extraBuildInputs) then
           (lib.getAttr pname extraBuildInputs) else [];
 
-      in mkPnpmDerivation innerDeps {
+      in (mkPnpmDerivation innerDeps {
         inherit name src pname version buildInputs;
         inherit pkgName;  # TODO: Remove this hack
-      };
-
-      deps = (map (dep: modules."${dep}")
-        (lib.mapAttrsFlatten (k: v: "/${k}/${v}") shrinkwrap.dependencies));
+      });
 
     in
     assert shrinkwrap.shrinkwrapVersion == 3;
-    mkPnpmDerivation deps {
+    (mkPnpmDerivation (map (dep: modules."${dep}")
+      (lib.mapAttrsFlatten (k: v: "/${k}/${v}") shrinkwrap.dependencies))
+    {
       inherit name pname version src;
-    };
+    });
 
 }

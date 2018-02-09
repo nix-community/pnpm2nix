@@ -137,11 +137,6 @@ in {
           then pkgInfo.version else lib.elemAt nameComponents 2;
         name = pname + "-" + version;
 
-        innerDeps = if (lib.hasAttr "dependencies" pkgInfo) then
-          (map (dep: modules."${dep}")
-            (lib.mapAttrsFlatten (k: v: "/${k}/${v}") pkgInfo.dependencies))
-          else [];
-
         src = pkgs.fetchurl {
           # Note: Tarballs do not have checksums yet
           # https://github.com/pnpm/pnpm/issues/1035
@@ -154,14 +149,20 @@ in {
         buildInputs = if (lib.hasAttr pname extraBuildInputs) then
           (lib.getAttr pname extraBuildInputs) else [];
 
-      in (mkPnpmDerivation innerDeps {
-        inherit name src pname version buildInputs;
-        inherit pkgName;  # TODO: Remove this hack
-      });
+      in (mkPnpmDerivation
+        (if (lib.hasAttr "dependencies" pkgInfo) then
+          (map (dep: modules."${dep}")
+          (lib.mapAttrsFlatten (k: v: "/${k}/${v}") pkgInfo.dependencies))
+          else [])
+        {
+          inherit name src pname version buildInputs;
+          inherit pkgName;  # TODO: Remove this hack
+        });
 
     in
     assert shrinkwrap.shrinkwrapVersion == 3;
-    (mkPnpmDerivation (map (dep: modules."${dep}")
+  (mkPnpmDerivation
+    (map (dep: modules."${dep}")
       (lib.mapAttrsFlatten (k: v: "/${k}/${v}") shrinkwrap.dependencies))
     {
       inherit name pname version src;

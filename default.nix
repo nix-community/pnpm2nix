@@ -83,21 +83,19 @@ let
       mkdir -p $out
       cp -a * $out/
 
-      cd $out
       # Create bin outputs
-      mkdir -p bin
+      mkdir -p $out/bin
       if test `jq 'has("bin")' < package.json` = true; then
-        jq -r '.bin | to_entries | map("ln -s $(readlink -f \(.value)) bin/\(.key) && chmod +x bin/\(.key)") | .[]' < package.json | while read l; do
+        jq -r '.bin | to_entries | map("ln -s $(readlink -f $out/\(.value)) $out/bin/\(.key) && chmod +x $out/bin/\(.key)") | .[]' < package.json | while read l; do
           eval "$l"
         done
       fi
       if test $(jq '.directories | has("bin")' < package.json) = "true"; then
         for f in $(jq -r '.directories.bin' < package.json)/*; do
-          ln -s `readlink -f "$f"` bin/
-          chmod +x "bin/$f"
+          ln -s `readlink -f "$out/$f"` $out/bin/
+          chmod +x "$out/bin/$f"
         done
       fi
-      cd -
 
       runHook postInstall
       '';

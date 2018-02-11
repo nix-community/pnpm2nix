@@ -24,7 +24,9 @@ let
 
   mkPnpmDerivation = deps: attrs: stdenv.mkDerivation (attrs //  {
 
-    buildInputs = [ nodejs python2 pkgs.jq ]
+    outputs = [ "bin" "lib" "out" ];
+
+    buildInputs = [ nodejs python2 pkgs.pkgconfig nodePackages.node-gyp pkgs.jq ]
       ++ lib.optionals (lib.hasAttr "buildInputs" attrs) attrs.buildInputs;
 
     configurePhase = ''
@@ -49,7 +51,7 @@ let
 
       # Link dependencies into node_modules
       mkdir node_modules
-      ${lib.concatStringsSep "\n" (map (dep: "ln -s ${dep} node_modules/${dep.pname}") deps)}
+      ${lib.concatStringsSep "\n" (map (dep: "ln -s ${lib.getLib dep} node_modules/${dep.pname}") deps)}
 
       if ${hasScript "preinstall"}; then
         npm run-script preinstall
@@ -81,18 +83,27 @@ let
       runHook preInstall
 
       mkdir -p $out
-      cp -a * $out/
+      mkdir -p $lib
+      cp -a * $lib/
 
       # Create bin outputs
-      mkdir -p $out/bin
+      mkdir -p $bin/bin
       if test `jq 'has("bin")' < package.json` = true; then
-        jq -r '.bin | to_entries | map("ln -s $(readlink -f $out/\(.value)) $out/bin/\(.key) && chmod +x $out/bin/\(.key)") | .[]' < package.json | while read l; do
-          eval "$l"
-        done
+
+        if test $(jq -r '.bin | type' < package.json) = "string"; then
+          file=$(jq -r '.bin' < package.json)
+          ln -s $(readlink -f $lib/$file) $bin/bin/${attrs.pname}
+          chmod +x $bin/bin/${attrs.pname}
+        else
+          jq -r '.bin | to_entries | map("ln -s $(readlink -f $lib/\(.value)) $bin/bin/\(.key) && chmod +x $bin/bin/\(.key)") | .[]' < package.json | while read l; do
+            eval "$l"
+          done
+        fi
+
       fi
       if test $(jq '.directories | has("bin")' < package.json) = "true"; then
         for f in $(jq -r '.directories.bin' < package.json)/*; do
-          ln -s `readlink -f "$out/$f"` $out/bin/
+          ln -s `readlink -f "$lib/$f"` $bin/bin/
           chmod +x "$out/bin/$f"
         done
       fi
@@ -101,6 +112,10 @@ let
       '';
   });
 
+  overrideDerivation = (overrides: drv:
+    if (lib.hasAttr drv.pname overrides) then
+      (overrides."${drv.pname}" drv)
+        else drv);
 
 in {
 
@@ -108,7 +123,7 @@ in {
     src,
     packageJSON ? src + "/package.json",
     shrinkwrapYML ? src + "/shrinkwrap.yaml",
-    extraBuildInputs ? {},
+    overrides ? {},
   }:
   let
     package = lib.importJSON packageJSON;
@@ -119,7 +134,7 @@ in {
       shrinkwrap = importYAML "${pname}-shrinkwrap-${version}" shrinkwrapYML;
 
       modules = with lib;
-        (listToAttrs (map (drv: nameValuePair drv.pkgName drv)
+        (listToAttrs (map (drv: nameValuePair drv.pkgName (overrideDerivation overrides drv))
           (map (name: (mkPnpmModule name shrinkwrap.packages."${name}"))
             (lib.attrNames shrinkwrap.packages))));
 
@@ -144,8 +159,9 @@ in {
           "${shaType}" = shaSum;
         };
 
-        buildInputs = if (lib.hasAttr pname extraBuildInputs) then
-          (lib.getAttr pname extraBuildInputs) else [];
+        # buildInputs = if (lib.hasAttr pname extraBuildInputs) then
+        #   (lib.getAttr pname extraBuildInputs) else [];
+        buildInputs = [];
 
       in (mkPnpmDerivation
         (if (lib.hasAttr "dependencies" pkgInfo) then

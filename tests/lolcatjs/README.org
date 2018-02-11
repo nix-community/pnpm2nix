@@ -1,2 +1,2 @@
 * Lolcat.js test build
-A simple enough build with nested dependencies
+A simple enough build with nested dependencies and one native d

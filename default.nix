@@ -161,7 +161,8 @@ in {
     assert shrinkwrap.shrinkwrapVersion == 3;
   (mkPnpmDerivation
     (map (dep: modules."${dep}")
-      (lib.mapAttrsFlatten (k: v: "/${k}/${v}") shrinkwrap.dependencies))
+      (lib.mapAttrsFlatten (k: v: "/${k}/${v}") (shrinkwrap.dependencies //
+        (if (lib.hasAttr "optionalDependencies" shrinkwrap) then shrinkwrap.optionalDependencies else {}))))
     {
       inherit name pname version src;
     });

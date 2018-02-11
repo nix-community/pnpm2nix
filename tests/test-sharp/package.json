@@ -1,0 +1,10 @@
+{
+  "name": "test-sharp",
+  "version": "1.0.0",
+  "bin": {
+    "testsharp": "test.js"
+  },
+  "dependencies": {
+    "sharp": "^0.19.0"
+  }
+}

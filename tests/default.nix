@@ -5,8 +5,10 @@ with import (builtins.fetchTarball {
 with lib.attrsets;
 
 let
-  lolcatjs = (import ./lolcatjs);
-  test-sharp = (import ./test-sharp);
+  importTest = testFile: (import testFile { inherit pkgs; });
+
+  lolcatjs = importTest ./lolcatjs;
+  test-sharp = importTest ./test-sharp;
 
   mkTest = (name: test: pkgs.runCommandNoCC "${name}" { } (''
     mkdir $out

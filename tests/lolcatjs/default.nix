@@ -1,6 +1,6 @@
-with (import <nixpkgs> {});
+{ pkgs ? (import <nixpkgs> {})}:
+with pkgs;
 with (import ../../. { inherit pkgs; });
-
 let
   package = mkPnpmPackage {
 

@@ -21,7 +21,7 @@ More comprehensive examples can be found in the [[file://tests/][tests]].
 ** Caveats and known bugs
 [[https://github.com/pnpm/pnpm/issues/1035][pnpm does not currently include checksums for tarballs]]
 
-Until this is fixed in =pnpm= github dependencies won't work.
+Until this is fixed in =pnpm= github dependencies won't work unless you opt in to impure builds.
 
 This is currently pre-alpha software, it might eat your kittens.
 

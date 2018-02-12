@@ -8,8 +8,6 @@
 let
   inherit (pkgs) stdenv lib fetchurl;
 
-  registryURL = "https://registry.npmjs.org/";
-
   importYAML = name: shrinkwrapYML: (lib.importJSON ((pkgs.runCommandNoCC name {} ''
     mkdir -p $out
     ${pkgs.yaml2json}/bin/yaml2json < ${shrinkwrapYML} | ${pkgs.jq}/bin/jq -a '.' > $out/shrinkwrap.json
@@ -125,6 +123,7 @@ in {
     packageJSON ? src + "/package.json",
     shrinkwrapYML ? src + "/shrinkwrap.yaml",
     overrides ? {},
+    buildInputs ? [],
   }:
   let
     package = lib.importJSON packageJSON;
@@ -160,17 +159,13 @@ in {
           "${shaType}" = shaSum;
         };
 
-        # buildInputs = if (lib.hasAttr pname extraBuildInputs) then
-        #   (lib.getAttr pname extraBuildInputs) else [];
-        buildInputs = [];
-
       in (mkPnpmDerivation
         (if (lib.hasAttr "dependencies" pkgInfo) then
           (map (dep: modules."${dep}")
           (lib.mapAttrsFlatten (k: v: "/${k}/${v}") pkgInfo.dependencies))
           else [])
         {
-          inherit name src pname version buildInputs;
+          inherit name src pname version;
           inherit pkgName;  # TODO: Remove this hack
         });
 
@@ -181,7 +176,7 @@ in {
       (lib.mapAttrsFlatten (k: v: "/${k}/${v}") (shrinkwrap.dependencies //
         (if (lib.hasAttr "optionalDependencies" shrinkwrap) then shrinkwrap.optionalDependencies else {}))))
     {
-      inherit name pname version src;
+      inherit name pname version src buildInputs;
     });
 
 }

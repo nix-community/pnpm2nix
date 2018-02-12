@@ -2,7 +2,7 @@
 , python2 ? pkgs.python2
 , nodejs ? pkgs.nodejs-8_x
 , nodePackages ? pkgs.nodePackages_8_x
-, pnpm ? pkgs.nodePackages_8_x.pnpm
+, node-gyp ? nodePackages.node-gyp
 }:
 
 let
@@ -15,7 +15,7 @@ let
     ${pkgs.yaml2json}/bin/yaml2json < ${shrinkwrapYML} | ${pkgs.jq}/bin/jq -a '.' > $out/shrinkwrap.json
   '').outPath + "/shrinkwrap.json"));
 
-  hasScript = scriptName: "test `jq '.scripts | has(\"${scriptName}\")' < package.json` = true";
+  hasScript = scriptName: "test `${pkgs.jq}/bin/jq '.scripts | has(\"${scriptName}\")' < package.json` = true";
 
   nodeSources = pkgs.runCommand "node-sources" {} ''
     tar --no-same-owner --no-same-permissions -xf ${nodejs.src}
@@ -26,14 +26,15 @@ let
 
     outputs = [ "bin" "lib" "out" ];
 
-    buildInputs = [ nodejs python2 pkgs.pkgconfig nodePackages.node-gyp pkgs.jq ]
+    buildInputs = [ nodejs python2 node-gyp ]
+      ++ (with pkgs; [ pkgconfig ])
       ++ lib.optionals (lib.hasAttr "buildInputs" attrs) attrs.buildInputs;
 
     configurePhase = ''
       runHook preConfigure
 
       # Because of the way the bin directive works, specifying both a bin path and setting directories.bin is an error
-      if test `jq '(.directories | has("bin")) and has("bin")' < package.json` = true; then
+      if test `${pkgs.jq}/bin/jq '(.directories | has("bin")) and has("bin")' < package.json` = true; then
         echo "package.json had both bin and directories.bin (see https://docs.npmjs.com/files/package.json#directoriesbin)"
         exit 1
       fi
@@ -88,21 +89,21 @@ let
 
       # Create bin outputs
       mkdir -p $bin/bin
-      if test `jq 'has("bin")' < package.json` = true; then
+      if test `${pkgs.jq}/bin/jq 'has("bin")' < package.json` = true; then
 
-        if test $(jq -r '.bin | type' < package.json) = "string"; then
-          file=$(jq -r '.bin' < package.json)
+        if test $(${pkgs.jq}/bin/jq -r '.bin | type' < package.json) = "string"; then
+          file=$(${pkgs.jq}/bin/jq -r '.bin' < package.json)
           ln -s $(readlink -f $lib/$file) $bin/bin/${attrs.pname}
           chmod +x $bin/bin/${attrs.pname}
         else
-          jq -r '.bin | to_entries | map("ln -s $(readlink -f $lib/\(.value)) $bin/bin/\(.key) && chmod +x $bin/bin/\(.key)") | .[]' < package.json | while read l; do
+          ${pkgs.jq}/bin/jq -r '.bin | to_entries | map("ln -s $(readlink -f $lib/\(.value)) $bin/bin/\(.key) && chmod +x $bin/bin/\(.key)") | .[]' < package.json | while read l; do
             eval "$l"
           done
         fi
 
       fi
-      if test $(jq '.directories | has("bin")' < package.json) = "true"; then
-        for f in $(jq -r '.directories.bin' < package.json)/*; do
+      if test $(${pkgs.jq}/bin/jq '.directories | has("bin")' < package.json) = "true"; then
+        for f in $(${pkgs.jq}/bin/jq -r '.directories.bin' < package.json)/*; do
           ln -s `readlink -f "$lib/$f"` $bin/bin/
           chmod +x "$out/bin/$f"
         done

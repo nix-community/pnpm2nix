@@ -1,0 +1,10 @@
+{
+  "name": "test-impure",
+  "version": "1.0.0",
+  "bin": {
+    "testapn": "test.js"
+  },
+  "dependencies": {
+    "apn": "^2.2.0"
+  }
+}

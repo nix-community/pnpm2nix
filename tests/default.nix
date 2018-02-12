@@ -9,6 +9,7 @@ let
 
   lolcatjs = importTest ./lolcatjs;
   test-sharp = importTest ./test-sharp;
+  test-impure = importTest ./test-impure;
 
   mkTest = (name: test: pkgs.runCommandNoCC "${name}" { } (''
     mkdir $out
@@ -37,5 +38,8 @@ lib.listToAttrs (map (drv: nameValuePair drv.name drv) [
 
   # Test a natively linked overriden dependency
   (mkTest "native-overrides" "${test-sharp}/bin/testsharp")
+
+  # Test to imupurely build a derivation
+  (mkTest "impure" "${test-impure}/bin/testapn")
 
 ])

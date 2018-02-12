@@ -124,6 +124,7 @@ in {
     shrinkwrapYML ? src + "/shrinkwrap.yaml",
     overrides ? {},
     buildInputs ? [],
+    allowImpure ? false
   }:
   let
     package = lib.importJSON packageJSON;
@@ -150,19 +151,26 @@ in {
           then pkgInfo.version else lib.elemAt nameComponents 2;
         name = pname + "-" + version;
 
-        src = pkgs.fetchurl {
-          # Note: Tarballs do not have checksums yet
-          # https://github.com/pnpm/pnpm/issues/1035
-          url = if (lib.hasAttr "tarball" pkgInfo.resolution)
-            then pkgInfo.resolution.tarball
-            else "${shrinkwrap.registry}${pname}/-/${name}.tgz";
-          "${shaType}" = shaSum;
-        };
+
+        src = (if (lib.hasAttr "integrity" pkgInfo.resolution) then
+          pkgs.fetchurl {
+            # Note: Tarballs do not have checksums yet
+            # https://github.com/pnpm/pnpm/issues/1035
+            url = if (lib.hasAttr "tarball" pkgInfo.resolution)
+              then pkgInfo.resolution.tarball
+              else "${shrinkwrap.registry}${pname}/-/${name}.tgz";
+            "${shaType}" = shaSum;
+
+            } else fetchTarball {
+              # Once pnpm has integrity sums for tarballs impure builds should be dropped
+              url = pkgInfo.resolution.tarball;
+            });
 
       in (mkPnpmDerivation
         (if (lib.hasAttr "dependencies" pkgInfo) then
-          (map (dep: modules."${dep}")
-          (lib.mapAttrsFlatten (k: v: "/${k}/${v}") pkgInfo.dependencies))
+          (lib.mapAttrsFlatten
+            (k: v: if (lib.hasAttr v modules && allowImpure) then modules."${v}" else modules."/${k}/${v}")
+              pkgInfo.dependencies)
           else [])
         {
           inherit name src pname version;

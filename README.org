@@ -1,0 +1,29 @@
+[[https://travis-ci.org/adisbladis/pnpm2nix][https://travis-ci.org/adisbladis/pnpm2nix.svg?branch=master]]
+
+* pnpm2nix
+Loads =pnpm='s shrinkwrap.yaml into nix expressions.
+
+** Example =default.nix=
+#+begin_src nix
+with (import <nixpkgs> {});
+with (import /path/to/pnpm2nix { inherit pkgs; });
+
+mkPnpmPackage {
+  src = ./.;
+  # These default to src/package.json & src/shrinkwrap.yaml
+  # packageJSON = ./package.json;
+  # shrinkwrapYML = ./shrinkwrap.yaml;
+}
+#+END_SRC
+
+More comprehensive examples can be found in the [[file://tests/][tests]].
+
+** Caveats and known bugs
+[[https://github.com/pnpm/pnpm/issues/1035][pnpm does not currently include checksums for tarballs]]
+
+Until this is fixed in =pnpm= github dependencies won't work.
+
+This is currently pre-alpha software, it might eat your kittens.
+
+** License
+=pnpm2nix= is released under the terms of the MIT license.

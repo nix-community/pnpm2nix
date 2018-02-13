@@ -92,9 +92,8 @@ let
         if test $(${pkgs.jq}/bin/jq -r '.bin | type' < package.json) = "string"; then
           file=$(${pkgs.jq}/bin/jq -r '.bin' < package.json)
           ln -s $(readlink -f $lib/$file) $bin/bin/${attrs.pname}
-          chmod +x $bin/bin/${attrs.pname}
         else
-          ${pkgs.jq}/bin/jq -r '.bin | to_entries | map("ln -s $(readlink -f $lib/\(.value)) $bin/bin/\(.key) && chmod +x $bin/bin/\(.key)") | .[]' < package.json | while read l; do
+          ${pkgs.jq}/bin/jq -r '.bin | to_entries | map("ln -s $(readlink -f $lib/\(.value)) $bin/bin/\(.key)") | .[]' < package.json | while read l; do
             eval "$l"
           done
         fi
@@ -103,9 +102,11 @@ let
       if test $(${pkgs.jq}/bin/jq '.directories | has("bin")' < package.json) = "true"; then
         for f in $(${pkgs.jq}/bin/jq -r '.directories.bin' < package.json)/*; do
           ln -s `readlink -f "$lib/$f"` $bin/bin/
-          chmod +x "$out/bin/$f"
         done
       fi
+      for f in $bin/bin/*; do
+        chmod +x "$f"
+      done
 
       runHook postInstall
       '';

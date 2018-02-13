@@ -145,21 +145,21 @@ in {
         shaType = lib.elemAt integrity 0;
         shaSum = lib.elemAt integrity 1;
 
-        nameComponents = lib.splitString "/" pkgName;
+        rawPname = lib.elemAt (builtins.match "(/|)(.+?)/[0-9].*" pkgName) 1;
         pname = if (lib.hasAttr "name" pkgInfo)
-          then pkgInfo.name else lib.elemAt nameComponents 1;
+          then pkgInfo.name else (lib.replaceStrings [ "@" "/" ] [ "" "-" ] rawPname);
         version = if (lib.hasAttr "version" pkgInfo)
-          then pkgInfo.version else lib.elemAt nameComponents 2;
+          then pkgInfo.version else (lib.elemAt (builtins.match ".*?/([0-9][A-Za-z\.0-9\.\-]+).*" pkgName) 0);
         name = pname + "-" + version;
 
-
+        tarball = (lib.lists.last (lib.splitString "/" rawPname)) + "-" + version + ".tgz";
         src = (if (lib.hasAttr "integrity" pkgInfo.resolution) then
           pkgs.fetchurl {
             # Note: Tarballs do not have checksums yet
             # https://github.com/pnpm/pnpm/issues/1035
             url = if (lib.hasAttr "tarball" pkgInfo.resolution)
               then pkgInfo.resolution.tarball
-              else "${shrinkwrap.registry}${pname}/-/${name}.tgz";
+              else "${shrinkwrap.registry}${rawPname}/-/${tarball}";
             "${shaType}" = shaSum;
 
             } else fetchTarball {

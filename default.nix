@@ -50,6 +50,7 @@ let
 
       # Link dependencies into node_modules
       mkdir node_modules
+      # ${lib.concatStringsSep "\n" (map (dep: "echo ${lib.getLib dep} : ${dep.pname} : ${dep.pkgName}") deps)}
       ${lib.concatStringsSep "\n" (map (dep: "ln -s ${lib.getLib dep} node_modules/${dep.pname}") deps)}
 
       if ${hasScript "preinstall"}; then
@@ -112,10 +113,26 @@ let
       '';
   });
 
+
+  # TODO: Reimplement semver parsing in nix
+  satisfiesSemver = version: versionSpec: (lib.importJSON ((pkgs.runCommandNoCC "semver" {} ''
+    env NODE_PATH=${nodePackages.semver}/lib/node_modules ${nodejs}/bin/node -e 'console.log(require("semver").satisfies("${version}", "${versionSpec}"))' > $out
+  '').outPath));
+  versionSpecMatches = (drv: versionSpec: satisfiesSemver drv.version versionSpec);
+
+  resolvePeerDependency = with builtins; (pname: versionSpec: modules:
+    lib.elemAt (builtins.sort (a: b: lib.versionOlder b.version a.version) (filter (drv: versionSpecMatches drv versionSpec)
+      (filter (drv: drv.pname == pname)
+        (lib.mapAttrsFlatten (k: v: v) modules)))) 0);
+
   overrideDerivation = (overrides: drv:
     if (lib.hasAttr drv.pname overrides) then
       (overrides."${drv.pname}" drv)
         else drv);
+
+  resolveDependencies = pkgInfo: modules: (lib.mapAttrsFlatten
+    (k: v: if (lib.hasAttr v modules) then modules."${v}" else modules."/${k}/${v}")
+      ((if (lib.hasAttr "dependencies" pkgInfo) then pkgInfo.dependencies else {}) // (if (lib.hasAttr "optionalDependencies" pkgInfo) then pkgInfo.optionalDependencies else {})));
 
 in {
 
@@ -162,27 +179,27 @@ in {
               else "${shrinkwrap.registry}${rawPname}/-/${tarball}";
             "${shaType}" = shaSum;
 
-            } else fetchTarball {
+            } else if allowImpure then fetchTarball {
               # Once pnpm has integrity sums for tarballs impure builds should be dropped
               url = pkgInfo.resolution.tarball;
-            });
+            } else throw "No download method found");
 
-      in (mkPnpmDerivation
-        (if (lib.hasAttr "dependencies" pkgInfo) then
-          (lib.mapAttrsFlatten
-            (k: v: if (lib.hasAttr v modules && allowImpure) then modules."${v}" else modules."/${k}/${v}")
-              pkgInfo.dependencies)
-          else [])
-        {
-          inherit name src pname version;
-          inherit pkgName;  # TODO: Remove this hack
-        });
+        peerDependencies = (if (lib.hasAttr "peerDependencies" pkgInfo)
+          then (lib.mapAttrsFlatten (k: v:
+            (resolvePeerDependency k v modules)) pkgInfo.peerDependencies)
+          else []);
+
+        deps = resolveDependencies pkgInfo modules;
+
+      in mkPnpmDerivation (lib.unique (deps ++ peerDependencies)) {
+        inherit name src pname version;
+        inherit pkgName;  # TODO: Remove this hack
+      };
 
     in
     assert shrinkwrap.shrinkwrapVersion == 3;
   (mkPnpmDerivation
-    (lib.mapAttrsFlatten (k: v: if (lib.hasAttr v modules && allowImpure) then modules."${v}" else modules."/${k}/${v}") (shrinkwrap.dependencies //
-      (if (lib.hasAttr "optionalDependencies" shrinkwrap) then shrinkwrap.optionalDependencies else {})))
+    (resolveDependencies shrinkwrap modules)
     {
       inherit name pname version src buildInputs;
     });

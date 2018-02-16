@@ -7,6 +7,8 @@ with lib.attrsets;
 let
   importTest = testFile: (import testFile { inherit pkgs; });
 
+  pnpm2nix = ../.;
+
   lolcatjs = importTest ./lolcatjs;
   test-sharp = importTest ./test-sharp;
   test-impure = importTest ./test-impure;
@@ -41,5 +43,9 @@ lib.listToAttrs (map (drv: nameValuePair drv.name drv) [
 
   # Test to imupurely build a derivation
   (mkTest "impure" "${test-impure}/bin/testapn")
+
+  (mkTest "python-lint" ''
+    echo ${(python2.withPackages (ps: [ ps.flake8 ]))}/bin/flake8 ${pnpm2nix}/
+  '')
 
 ])

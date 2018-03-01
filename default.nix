@@ -14,11 +14,6 @@ let
 
   hasScript = scriptName: "test `${pkgs.jq}/bin/jq '.scripts | has(\"${scriptName}\")' < package.json` = true";
 
-  nodeSources = pkgs.runCommand "node-sources" {} ''
-    tar --no-same-owner --no-same-permissions -xf ${nodejs.src}
-    mv node-* $out
-  '';
-
   linkBinOutputsScript = ./link-bin-outputs.py;
 
   mkPnpmDerivation = deps: attrs: stdenv.mkDerivation (attrs //  {
@@ -52,7 +47,7 @@ let
       fi
 
       # Prevent gyp from going online (no matter if invoked by us or by package.json)
-      export npm_config_nodedir=${nodeSources}
+      export npm_config_nodedir="${nodejs}"
 
       # Link dependencies into node_modules
       mkdir node_modules

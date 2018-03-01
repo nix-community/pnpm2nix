@@ -1,0 +1,14 @@
+# This file is hand-built
+# Test is only expected to check name/version attributes of generated derivation
+dependencies:
+  web3: 1.0.0-beta.30
+packages:
+  /web3/1.0.0-beta.30:
+    dev: false
+    resolution:
+      integrity: sha1-rT52GEWusvQKd2DN51eTdzpDHs0=
+registry: 'https://registry.npmjs.org/'
+shrinkwrapMinorVersion: 4
+shrinkwrapVersion: 3
+specifiers:
+  web3: ^1.0.0-beta.30

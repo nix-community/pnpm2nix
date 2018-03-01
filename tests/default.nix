@@ -17,6 +17,7 @@ let
   test-impure = importTest ./test-impure;
   nested-dirs = importTest ./nested-dirs;
   test-peerdependencies = importTest ./test-peerdependencies;
+  web3 = importTest ./web3;
 
   mkTest = (name: test: pkgs.runCommandNoCC "${name}" { } (''
     mkdir $out
@@ -64,6 +65,15 @@ lib.listToAttrs (map (drv: nameValuePair drv.name drv) [
     winstonRoot=$(readlink -f ${lib.getLib test-peerdependencies}/node_modules/winston)
 
     test "''${winstonPeer}" = "''${winstonRoot}" || (echo "Different versions in root and peer dependency resolution"; exit 1)
+  '')
+
+  # Test a "weird" package with -beta in version number spec
+  (let
+    web3Drv = lib.elemAt (lib.filter (x: x.name == "web3-1.0.0-beta.30") web3.buildInputs) 0;
+
+  in mkTest "test-beta-names" ''
+    test "${web3Drv.name}" = "web3-1.0.0-beta.30" || (echo "web3 name mismatch"; exit 1)
+    test "${web3Drv.version}" = "1.0.0-beta.30" || (echo "web3 version mismatch"; exit 1)
   '')
 
 ])

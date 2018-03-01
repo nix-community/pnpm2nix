@@ -31,7 +31,8 @@ let
 
     buildInputs = [ nodejs nodejs.passthru.python node-gyp ]
       ++ (with pkgs; [ pkgconfig ])
-      ++ lib.optionals (lib.hasAttr "buildInputs" attrs) attrs.buildInputs;
+      ++ lib.optionals (lib.hasAttr "buildInputs" attrs) attrs.buildInputs
+      ++ deps;
 
     configurePhase = ''
       runHook preConfigure

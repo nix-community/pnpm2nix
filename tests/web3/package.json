@@ -1,0 +1,7 @@
+{
+  "name": "test-web3",
+  "version": "1.0.0",
+  "dependencies": {
+    "web3": "^1.0.0-beta.30"
+  }
+}

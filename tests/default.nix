@@ -1,8 +1,11 @@
-with import (builtins.fetchTarball {
-  url = "https://api.github.com/repos/nixos/nixpkgs/tarball/daaa594aa5dc946c3656ec9ef06e80b7068f0904";
-  sha256 = "0y8l245w5k0lh0spb3xh956f1lapmr50yf2smqsy03dg47crirb1";
-}) { };
+with (import ((import <nixpkgs> {}).fetchFromGitHub {
+  repo = "nixpkgs-channels";
+  owner = "NixOS";
+  sha256 = "06p37s6ri80z9yp0r6ymjakls1dwqay5xp2cwlymzcyzgaf7g1xg";
+  rev = "268d99b1fe4c6066bbdc1b3debf8766dd247c7bf";
+}) { });
 with lib.attrsets;
+with lib;
 
 let
   importTest = testFile: (import testFile { inherit pkgs; });
@@ -12,6 +15,7 @@ let
   lolcatjs = importTest ./lolcatjs;
   test-sharp = importTest ./test-sharp;
   test-impure = importTest ./test-impure;
+  nested-dirs = importTest ./nested-dirs;
 
   mkTest = (name: test: pkgs.runCommandNoCC "${name}" { } (''
     mkdir $out
@@ -46,6 +50,11 @@ lib.listToAttrs (map (drv: nameValuePair drv.name drv) [
 
   (mkTest "python-lint" ''
     echo ${(python2.withPackages (ps: [ ps.flake8 ]))}/bin/flake8 ${pnpm2nix}/
+  '')
+
+  # Check if nested directory structures work properly
+  (mkTest "nested-dirs" ''
+    test -e ${lib.getLib nested-dirs}/node_modules/@types/node || (echo "Nested directory structure does not exist"; exit 1)
   '')
 
 ])

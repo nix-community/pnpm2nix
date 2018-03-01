@@ -1,0 +1,12 @@
+dependencies:
+  '@types/node': 9.4.6
+packages:
+  /@types/node/9.4.6:
+    dev: false
+    resolution:
+      integrity: sha512-CTUtLb6WqCCgp6P59QintjHWqzf4VL1uPA27bipLAPxFqrtK1gEYllePzTICGqQ8rYsCbpnsNypXjjDzGAAjEQ==
+registry: 'https://registry.npmjs.org/'
+shrinkwrapMinorVersion: 4
+shrinkwrapVersion: 3
+specifiers:
+  '@types/node': ^9.4.6

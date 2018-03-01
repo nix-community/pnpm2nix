@@ -1,0 +1,7 @@
+{
+  "name": "nested-dirs",
+  "version": "1.0.0",
+  "dependencies": {
+    "@types/node": "^9.4.6"
+  }
+}

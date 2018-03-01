@@ -16,6 +16,7 @@ let
   test-sharp = importTest ./test-sharp;
   test-impure = importTest ./test-impure;
   nested-dirs = importTest ./nested-dirs;
+  test-peerdependencies = importTest ./test-peerdependencies;
 
   mkTest = (name: test: pkgs.runCommandNoCC "${name}" { } (''
     mkdir $out
@@ -55,6 +56,14 @@ lib.listToAttrs (map (drv: nameValuePair drv.name drv) [
   # Check if nested directory structures work properly
   (mkTest "nested-dirs" ''
     test -e ${lib.getLib nested-dirs}/node_modules/@types/node || (echo "Nested directory structure does not exist"; exit 1)
+  '')
+
+  # Check if peer dependencies are resolved
+  (mkTest "peerdependencies" ''
+    winstonPeer=$(readlink -f ${lib.getLib test-peerdependencies}/node_modules/winston-logstash/node_modules/winston)
+    winstonRoot=$(readlink -f ${lib.getLib test-peerdependencies}/node_modules/winston)
+
+    test "''${winstonPeer}" = "''${winstonRoot}" || (echo "Different versions in root and peer dependency resolution"; exit 1)
   '')
 
 ])

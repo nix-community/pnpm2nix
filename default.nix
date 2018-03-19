@@ -127,57 +127,57 @@ in {
   }:
   let
     package = lib.importJSON packageJSON;
-      pname = package.name;
-      version = package.version;
-      name = pname + "-" + version;
+    pname = package.name;
+    version = package.version;
+    name = pname + "-" + version;
 
-      shrinkwrap = importYAML "${pname}-shrinkwrap-${version}" shrinkwrapYML;
+    shrinkwrap = importYAML "${pname}-shrinkwrap-${version}" shrinkwrapYML;
 
-      modules = with lib;
-        (listToAttrs (map (drv: nameValuePair drv.pkgName (overrideDerivation overrides drv))
-          (map (name: (mkPnpmModule name shrinkwrap.packages."${name}"))
-            (lib.attrNames shrinkwrap.packages))));
+    modules = with lib;
+      (listToAttrs (map (drv: nameValuePair drv.pkgName (overrideDerivation overrides drv))
+        (map (name: (mkPnpmModule name shrinkwrap.packages."${name}"))
+          (lib.attrNames shrinkwrap.packages))));
 
-      mkPnpmModule = pkgName: pkgInfo: let
-        integrity = lib.splitString "-" pkgInfo.resolution.integrity;
-        shaType = lib.elemAt integrity 0;
-        shaSum = lib.elemAt integrity 1;
+    mkPnpmModule = pkgName: pkgInfo: let
+      integrity = lib.splitString "-" pkgInfo.resolution.integrity;
+      shaType = lib.elemAt integrity 0;
+      shaSum = lib.elemAt integrity 1;
 
-        rawPname = lib.elemAt (builtins.match "(/|)(.+?)/[0-9].*" pkgName) 1;
-        pname = if (lib.hasAttr "name" pkgInfo)
-          then pkgInfo.name else rawPname;
-        version = if (lib.hasAttr "version" pkgInfo)
-          then pkgInfo.version else (lib.elemAt (builtins.match ".*?/([0-9][A-Za-z\.0-9\.\-]+).*" pkgName) 0);
-        name = (lib.replaceStrings [ "@" "/" ] [ "" "-" ] pname) + "-" + version;
+      rawPname = lib.elemAt (builtins.match "(/|)(.+?)/[0-9].*" pkgName) 1;
+      pname = if (lib.hasAttr "name" pkgInfo)
+        then pkgInfo.name else rawPname;
+      version = if (lib.hasAttr "version" pkgInfo)
+        then pkgInfo.version else (lib.elemAt (builtins.match ".*?/([0-9][A-Za-z\.0-9\.\-]+).*" pkgName) 0);
+      name = (lib.replaceStrings [ "@" "/" ] [ "" "-" ] pname) + "-" + version;
 
-        tarball = (lib.lists.last (lib.splitString "/" rawPname)) + "-" + version + ".tgz";
-        src = (if (lib.hasAttr "integrity" pkgInfo.resolution) then
-          pkgs.fetchurl {
-            # Note: Tarballs do not have checksums yet
-            # https://github.com/pnpm/pnpm/issues/1035
-            url = if (lib.hasAttr "tarball" pkgInfo.resolution)
-              then pkgInfo.resolution.tarball
-              else "${shrinkwrap.registry}${pname}/-/${tarball}";
-            "${shaType}" = shaSum;
+      tarball = (lib.lists.last (lib.splitString "/" rawPname)) + "-" + version + ".tgz";
+      src = (if (lib.hasAttr "integrity" pkgInfo.resolution) then
+        pkgs.fetchurl {
+          # Note: Tarballs do not have checksums yet
+          # https://github.com/pnpm/pnpm/issues/1035
+          url = if (lib.hasAttr "tarball" pkgInfo.resolution)
+            then pkgInfo.resolution.tarball
+            else "${shrinkwrap.registry}${pname}/-/${tarball}";
+          "${shaType}" = shaSum;
 
-            } else if allowImpure then fetchTarball {
-              # Once pnpm has integrity sums for tarballs impure builds should be dropped
-              url = pkgInfo.resolution.tarball;
-            } else throw "No download method found");
+          } else if allowImpure then fetchTarball {
+            # Once pnpm has integrity sums for tarballs impure builds should be dropped
+            url = pkgInfo.resolution.tarball;
+          } else throw "No download method found");
 
-        peerDependencies = (if (lib.hasAttr "peerDependencies" pkgInfo)
-          then (lib.mapAttrsFlatten (k: v:
-            (resolvePeerDependency k v modules)) pkgInfo.peerDependencies)
-          else []);
+      peerDependencies = (if (lib.hasAttr "peerDependencies" pkgInfo)
+        then (lib.mapAttrsFlatten (k: v:
+          (resolvePeerDependency k v modules)) pkgInfo.peerDependencies)
+        else []);
 
-        deps = resolveDependencies pkgInfo modules;
+      deps = resolveDependencies pkgInfo modules;
 
-      in mkPnpmDerivation (lib.unique (deps ++ peerDependencies)) {
-        inherit name src pname version;
-        inherit pkgName;  # TODO: Remove this hack
-      };
+    in mkPnpmDerivation (lib.unique (deps ++ peerDependencies)) {
+      inherit name src pname version;
+      inherit pkgName;  # TODO: Remove this hack
+    };
 
-    in
+  in
     assert shrinkwrap.shrinkwrapVersion == 3;
   (mkPnpmDerivation
     (resolveDependencies shrinkwrap modules)

@@ -122,10 +122,11 @@ in {
     packageJSON ? src + "/package.json",
     shrinkwrapYML ? src + "/shrinkwrap.yaml",
     overrides ? {},
-    buildInputs ? [],
     allowImpure ? false
-  }:
+  } @args:
   let
+    specialAttrs = [ "packageJSON" "shrinkwrapYML" "overrides" "allowImpure" ];
+
     package = lib.importJSON packageJSON;
     pname = package.name;
     version = package.version;
@@ -170,9 +171,9 @@ in {
           (resolvePeerDependency k v modules)) pkgInfo.peerDependencies)
         else []);
 
-      deps = resolveDependencies pkgInfo modules;
+      deps = lib.unique ((resolveDependencies pkgInfo modules) ++ peerDependencies);
 
-    in mkPnpmDerivation (lib.unique (deps ++ peerDependencies)) {
+    in mkPnpmDerivation deps {
       inherit name src pname version;
       inherit pkgName;  # TODO: Remove this hack
     };
@@ -181,8 +182,9 @@ in {
     assert shrinkwrap.shrinkwrapVersion == 3;
   (mkPnpmDerivation
     (resolveDependencies shrinkwrap modules)
-    {
-      inherit name pname version src buildInputs;
-    });
+    # Filter "special" attrs we know how to interpret, merge rest to drv attrset
+    ((lib.filterAttrs (k: v: !(lib.lists.elem k specialAttrs)) args) // {
+      inherit name pname version;
+    }));
 
 }

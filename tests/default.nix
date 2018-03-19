@@ -17,6 +17,7 @@ let
   test-impure = importTest ./test-impure;
   nested-dirs = importTest ./nested-dirs;
   test-peerdependencies = importTest ./test-peerdependencies;
+  test-devdependencies = importTest ./test-devdependencies;
   web3 = importTest ./web3;
 
   mkTest = (name: test: pkgs.runCommandNoCC "${name}" { } (''
@@ -74,6 +75,13 @@ lib.listToAttrs (map (drv: nameValuePair drv.name drv) [
   in mkTest "test-beta-names" ''
     test "${web3Drv.name}" = "web3-1.0.0-beta.30" || (echo "web3 name mismatch"; exit 1)
     test "${web3Drv.version}" = "1.0.0-beta.30" || (echo "web3 version mismatch"; exit 1)
+  '')
+
+  # Check if checkPhase is being run correctly
+  (mkTest "devdependencies" ''
+    for testScript in "pretest" "test" "posttest"; do
+      test -f ${test-devdependencies}/build/''${testScript}
+    done
   '')
 
 ])

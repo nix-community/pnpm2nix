@@ -1,0 +1,13 @@
+{
+  "name": "test-devdependencies",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "pretest": "touch build/pretest",
+    "test": "mocha --reporter min | grep '1 passing' && touch build/test",
+    "posttest": "touch build/posttest"
+  },
+  "devDependencies": {
+    "mocha": "^5.0.4"
+  }
+}

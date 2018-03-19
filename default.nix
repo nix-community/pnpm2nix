@@ -16,7 +16,11 @@ let
 
   linkBinOutputsScript = ./link-bin-outputs.py;
 
-  mkPnpmDerivation = deps: attrs: stdenv.mkDerivation (attrs //  {
+  mkPnpmDerivation = {
+    attrs ? {},
+    checkInputs ? [],
+    deps ? []
+  }: stdenv.mkDerivation (attrs //  {
 
     outputs = [ "out" "lib" ];
 
@@ -29,13 +33,24 @@ let
       ++ lib.optionals (lib.hasAttr "buildInputs" attrs) attrs.buildInputs
       ++ deps;
 
+    inherit checkInputs;
+
+   checkPhase = ''
+     runHook preCheck
+
+     for testScript in "pretest" "test" "posttest"; do
+        PATH="${lib.makeBinPath checkInputs}:$PATH" eval $(${pkgs.jq}/bin/jq -r ".scripts.''${testScript} // empty" < package.json)
+      done
+
+      runHook postCheck
+    '';
+
     configurePhase = ''
       runHook preConfigure
 
       # Because of the way the bin directive works, specifying both a bin path and setting directories.bin is an error
       if test `${pkgs.jq}/bin/jq '(.directories | has("bin")) and has("bin")' < package.json` = true; then
         echo "package.json had both bin and directories.bin (see https://docs.npmjs.com/files/package.json#directoriesbin)"
-        exit 1
       fi
 
       # node-gyp writes to $HOME
@@ -115,6 +130,11 @@ let
     (k: v: if (lib.hasAttr v modules) then modules."${v}" else modules."/${k}/${v}")
       ((if (lib.hasAttr "dependencies" pkgInfo) then pkgInfo.dependencies else {}) // (if (lib.hasAttr "optionalDependencies" pkgInfo) then pkgInfo.optionalDependencies else {})));
 
+  # TODO: Merge this function with resolveDependencies
+  resolveDevDependencies = pkgInfo: modules: (lib.mapAttrsFlatten
+    (k: v: if (lib.hasAttr v modules) then modules."${v}" else modules."/${k}/${v}")
+      ((if (lib.hasAttr "devDependencies" pkgInfo) then pkgInfo.devDependencies else {})));
+
 in {
 
   mkPnpmPackage = {
@@ -122,7 +142,8 @@ in {
     packageJSON ? src + "/package.json",
     shrinkwrapYML ? src + "/shrinkwrap.yaml",
     overrides ? {},
-    allowImpure ? false
+    allowImpure ? false,
+    ...
   } @args:
   let
     specialAttrs = [ "packageJSON" "shrinkwrapYML" "overrides" "allowImpure" ];
@@ -173,18 +194,21 @@ in {
 
       deps = lib.unique ((resolveDependencies pkgInfo modules) ++ peerDependencies);
 
-    in mkPnpmDerivation deps {
-      inherit name src pname version;
-      inherit pkgName;  # TODO: Remove this hack
+    in mkPnpmDerivation {
+      inherit deps;
+      attrs = { inherit name src pname version pkgName; };
     };
 
   in
     assert shrinkwrap.shrinkwrapVersion == 3;
-  (mkPnpmDerivation
-    (resolveDependencies shrinkwrap modules)
+  (mkPnpmDerivation {
+    deps = (resolveDependencies shrinkwrap modules);
+    checkInputs = (resolveDevDependencies shrinkwrap modules);
     # Filter "special" attrs we know how to interpret, merge rest to drv attrset
-    ((lib.filterAttrs (k: v: !(lib.lists.elem k specialAttrs)) args) // {
+    attrs = ((lib.filterAttrs (k: v: !(lib.lists.elem k specialAttrs)) args) // {
       inherit name pname version;
-    }));
+    });
+  });
+
 
 }

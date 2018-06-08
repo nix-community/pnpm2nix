@@ -116,10 +116,16 @@ let
   '').outPath));
   versionSpecMatches = (drv: versionSpec: satisfiesSemver drv.version versionSpec);
 
-  resolvePeerDependency = with builtins; (pname: versionSpec: modules:
-    lib.elemAt (builtins.sort (a: b: lib.versionOlder b.version a.version) (filter (drv: versionSpecMatches drv versionSpec)
-      (filter (drv: drv.pname == pname)
-        (lib.mapAttrsFlatten (k: v: v) modules)))) 0);
+  # Note: resolvePeerDependency can return null!
+  # A peer dependency is always listed in the shrinkwrap peerdependencies
+  # but is not always in the dependency graph
+  resolvePeerDependency = pname: versionSpec: modules:
+    with builtins; let
+      flattend = (lib.mapAttrsFlatten (k: v: v) modules);
+      matches = (filter (drv: drv.pname == pname) flattend);
+      sorted = builtins.sort (a: b: lib.versionOlder b.version a.version)
+        (filter (drv: versionSpecMatches drv versionSpec) matches);
+    in if (lib.length matches > 0) then lib.elemAt sorted 0 else null;
 
   overrideDerivation = (overrides: drv:
     if (lib.hasAttr drv.pname overrides) then
@@ -187,9 +193,12 @@ in {
             url = pkgInfo.resolution.tarball;
           } else throw "No download method found");
 
-      peerDependencies = (if (lib.hasAttr "peerDependencies" pkgInfo)
-        then (lib.mapAttrsFlatten (k: v:
-          (resolvePeerDependency k v modules)) pkgInfo.peerDependencies)
+      peerDependencies = (if (lib.hasAttr "peerDependencies" pkgInfo) then (let
+          resolve = (pname: versionSpec: (resolvePeerDependency pname versionSpec modules));
+          mapAttrsFlattenAndFilter = mapfn: filterfn: r: let
+            attrs = (lib.attrNames r);
+          in lib.filter filterfn ((map (attr: mapfn attr r.${attr})) attrs);
+        in (mapAttrsFlattenAndFilter resolve (x: x != null) pkgInfo.peerDependencies))
         else []);
 
       deps = lib.unique ((resolveDependencies pkgInfo modules) ++ peerDependencies);

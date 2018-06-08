@@ -19,6 +19,7 @@ let
   test-peerdependencies = importTest ./test-peerdependencies;
   test-devdependencies = importTest ./test-devdependencies;
   web3 = importTest ./web3;
+  issue-1 = importTest ./issues/1;
 
   mkTest = (name: test: pkgs.runCommandNoCC "${name}" { } (''
     mkdir $out
@@ -82,6 +83,18 @@ lib.listToAttrs (map (drv: nameValuePair drv.name drv) [
     for testScript in "pretest" "test" "posttest"; do
       test -f ${test-devdependencies}/build/''${testScript}
     done
+  '')
+
+  # Reported as "Infinite recursion"
+  #
+  # I didn't get that error while using the same code
+  # Instead I got an issue accessing a peer-dependency which is not
+  # in the shrinkwrap
+  # This test passes using nix 2.0.4
+  #
+  # See github issue https://github.com/adisbladis/pnpm2nix/issues/1
+  (mkTest "issue-1" ''
+    echo ${issue-1}
   '')
 
 ])

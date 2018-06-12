@@ -20,6 +20,7 @@ let
   test-devdependencies = importTest ./test-devdependencies;
   web3 = importTest ./web3;
   issue-1 = importTest ./issues/1;
+  test-falsy-script = importTest ./test-falsy-script;
 
   mkTest = (name: test: pkgs.runCommandNoCC "${name}" { } (''
     mkdir $out
@@ -95,6 +96,11 @@ lib.listToAttrs (map (drv: nameValuePair drv.name drv) [
   # See github issue https://github.com/adisbladis/pnpm2nix/issues/1
   (mkTest "issue-1" ''
     echo ${issue-1}
+  '')
+
+  # Ensure package with falsy script (async-lock) builds
+  (mkTest "test-falsy-scripts" ''
+    echo ${test-falsy-script}
   '')
 
 ])

@@ -1,0 +1,8 @@
+{
+  "name": "test-falsy-script",
+  "version": "0.0.1",
+  "description": "Something something...",
+  "dependencies": {
+    "async-lock": "^1.1.3"
+  }
+}

@@ -12,7 +12,7 @@ let
     ${pkgs.yaml2json}/bin/yaml2json < ${shrinkwrapYML} | ${pkgs.jq}/bin/jq -a '.' > $out/shrinkwrap.json
   '').outPath + "/shrinkwrap.json"));
 
-  hasScript = scriptName: "${pkgs.jq}/bin/jq -e -r '.scripts | .${scriptName}' < package.json";
+  hasScript = scriptName: "test \"$(${pkgs.jq}/bin/jq -e -r '.scripts | .${scriptName} | length' < package.json)\" -gt 0";
 
   linkBinOutputsScript = ./link-bin-outputs.py;
 

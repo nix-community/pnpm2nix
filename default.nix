@@ -76,7 +76,6 @@ in {
             url = pkgInfo.resolution.tarball;
           } else throw "No download method found");
 
-      peerDependencies = [];  # TODO: Reimplement
       deps = builtins.map (attrName: packages."${attrName}") pkgInfo.dependencies;
 
     in
@@ -92,7 +91,6 @@ in {
       (attrName: packages."${attrName}")
       (shrinkwrap.dependencies ++ shrinkwrap.optionalDependencies));
 
-    # TODO: Dont separate checkInputs
     checkInputs = builtins.map
       (attrName: packages."${attrName}") shrinkwrap.devDependencies;
 

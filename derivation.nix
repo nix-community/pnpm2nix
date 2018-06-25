@@ -34,14 +34,17 @@ in {
 
     inherit checkInputs;
 
-   checkPhase = ''
-     runHook preCheck
-
-     # TODO: Run scripts using npm
-     for testScript in "pretest" "test" "posttest"; do
-        PATH="${lib.makeBinPath checkInputs}:$PATH" eval $(${pkgs.jq}/bin/jq -r ".scripts.''${testScript} // empty" < package.json)
-      done
-
+    checkPhase = let
+      runTestScript = scriptName: ''
+        if ${hasScript scriptName}; then
+          PATH="${lib.makeBinPath checkInputs}:$PATH" npm run-script ${scriptName}
+        fi
+      '';
+    in ''
+      runHook preCheck
+      ${runTestScript "pretest"}
+      ${runTestScript "test"}
+      ${runTestScript "posttest"}
       runHook postCheck
     '';
 
@@ -94,14 +97,16 @@ in {
       runHook postBuild
     '';
 
-    installPhase = ''
+    installPhase = let
+      linkBinOutputs = "${nodejs.passthru.python}/bin/python ${linkBinOutputsScript}";
+    in ''
       runHook preInstall
 
       mkdir -p "$out/bin" "$lib"
       cp -a * $lib/
 
       # Create bin outputs
-      ${nodejs.passthru.python}/bin/python ${linkBinOutputsScript} "$out/bin/" "$lib" ./package.json | while read bin_in; do
+      ${linkBinOutputs} "$out/bin/" "$lib" ./package.json | while read bin_in; do
         patchShebangs "$bin_in"
       done
 

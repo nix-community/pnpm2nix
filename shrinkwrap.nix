@@ -151,10 +151,18 @@ let
             then pkg.optionalDependencies
             else {});
 
-        dependencies = lib.foldl (acc: depName: (let
+        baseDependencies = lib.foldl (acc: depName: (let
             depVersion = attrSet."${depName}";
             ret = acc ++ [ (findAttrName packageSet depName depVersion) ];
-          in ret)) [] (lib.attrNames attrSet) ++ pkg.peerDependencies;
+          in ret)) [] (lib.attrNames attrSet);
+
+        # Create a list of pnames so we can filter out any peerDependencies weirdness
+        basePnames = builtins.map (attrName: packageSet."${attrName}".pname) baseDependencies;
+        # Filter out pre-resolved (by pnpm) peer dependencies
+        dependencies =
+          builtins.filter (attrName: !(lib.elem packageSet."${attrName}".pname basePnames)) pkg.peerDependencies
+          ++ baseDependencies;
+
       in {
         "${pkgAttr}" = (pkg // {
           dependencies = lib.unique dependencies;

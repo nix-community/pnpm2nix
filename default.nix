@@ -28,6 +28,10 @@ let
 
 in {
 
+  mkPnpmShell = drv: makeSetupHook { deps = drv.buildInputs; } (writeScript "pnpm-env-hook.sh" ''
+    export NODE_PATH=${lib.getLib drv}/node_modules
+  '');
+
   mkPnpmPackage = {
     src,
     packageJSON ? src + "/package.json",

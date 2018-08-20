@@ -31,6 +31,7 @@ in {
 
     buildInputs = [ nodejs nodejs.passthru.python node-gyp ]
       ++ lib.optionals (lib.hasAttr "buildInputs" attrs) attrs.buildInputs
+      ++ lib.optionals linkDevDependencies devDependencies
       ++ deps;
 
     checkInputs = devDependencies;
@@ -62,16 +63,11 @@ in {
       # node-gyp writes to $HOME
       export HOME="$TEMPDIR"
 
-      if [[ -d node_modules || -L node_modules ]]; then
-        echo "./node_modules is present. Removing."
-        rm -rf node_modules
-      fi
-
       # Prevent gyp from going online (no matter if invoked by us or by package.json)
       export npm_config_nodedir="${nodejs}"
 
       # Link dependencies into node_modules
-      mkdir node_modules
+      mkdir -p node_modules
       ${lib.concatStringsSep "\n" (map (dep: "mkdir -p $(dirname node_modules/${dep.pname}) && ln -s ${lib.getLib dep} node_modules/${dep.pname}") linkDeps)}
 
       if ${hasScript "preinstall"}; then

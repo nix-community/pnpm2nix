@@ -21,7 +21,7 @@ let
     ${pkgs.yaml2json}/bin/yaml2json < ${yamlFile} | ${pkgs.jq}/bin/jq -a '.' > $out/shrinkwrap.json
   '').outPath + "/shrinkwrap.json"));
 
-  overrideDerivation = (overrides: drv:
+  overrideDrv = (overrides: drv:
     if (lib.hasAttr drv.pname overrides) then
       (overrides."${drv.pname}" drv)
         else drv);
@@ -34,6 +34,7 @@ in {
     shrinkwrapYML ? src + "/shrinkwrap.yaml",
     overrides ? {},
     allowImpure ? false,
+    linkDevDependencies ? false,
     ...
   } @args:
   let
@@ -51,7 +52,7 @@ in {
     # Convert pnpm package entries to nix derivations
     packages = lib.mapAttrs (n: v: (let
       drv = mkPnpmModule n v;
-      overriden = overrideDerivation overrides drv;
+      overriden = overrideDrv overrides drv;
     in overriden)) shrinkwrap.packages;
 
     mkPnpmModule = pkgName: pkgInfo: let
@@ -82,6 +83,7 @@ in {
       mkPnpmDerivation {
         inherit deps;
         attrs = { inherit name src pname version pkgName; };
+        linkDevDependencies = false;
       };
 
   in
@@ -91,8 +93,10 @@ in {
       (attrName: packages."${attrName}")
       (shrinkwrap.dependencies ++ shrinkwrap.optionalDependencies));
 
-    checkInputs = builtins.map
+    devDependencies = builtins.map
       (attrName: packages."${attrName}") shrinkwrap.devDependencies;
+
+    inherit linkDevDependencies;
 
     # Filter "special" attrs we know how to interpret, merge rest to drv attrset
     attrs = ((lib.filterAttrs (k: v: !(lib.lists.elem k specialAttrs)) args) // {

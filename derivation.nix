@@ -16,8 +16,9 @@ in {
 
   mkPnpmDerivation = {
     attrs ? {},
-    checkInputs ? [],
-    deps ? []
+    devDependencies ? [],
+    deps ? [],
+    linkDevDependencies,
   }: stdenv.mkDerivation (attrs //  {
 
     outputs = [ "out" "lib" ];
@@ -32,12 +33,12 @@ in {
       ++ lib.optionals (lib.hasAttr "buildInputs" attrs) attrs.buildInputs
       ++ deps;
 
-    inherit checkInputs;
+    checkInputs = devDependencies;
 
     checkPhase = let
       runTestScript = scriptName: ''
         if ${hasScript scriptName}; then
-          PATH="${lib.makeBinPath checkInputs}:$PATH" npm run-script ${scriptName}
+          PATH="${lib.makeBinPath devDependencies}:$PATH" npm run-script ${scriptName}
         fi
       '';
     in ''
@@ -48,7 +49,9 @@ in {
       runHook postCheck
     '';
 
-    configurePhase = ''
+    configurePhase = let
+      linkDeps = deps ++ lib.optionals linkDevDependencies devDependencies;
+    in ''
       runHook preConfigure
 
       # Because of the way the bin directive works, specifying both a bin path and setting directories.bin is an error
@@ -69,7 +72,7 @@ in {
 
       # Link dependencies into node_modules
       mkdir node_modules
-      ${lib.concatStringsSep "\n" (map (dep: "mkdir -p $(dirname node_modules/${dep.pname}) && ln -s ${lib.getLib dep} node_modules/${dep.pname}") deps)}
+      ${lib.concatStringsSep "\n" (map (dep: "mkdir -p $(dirname node_modules/${dep.pname}) && ln -s ${lib.getLib dep} node_modules/${dep.pname}") linkDeps)}
 
       if ${hasScript "preinstall"}; then
         npm run-script preinstall

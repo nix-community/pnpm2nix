@@ -18,6 +18,35 @@ mkPnpmPackage {
 
 More comprehensive examples can be found in the [[file://tests/][tests]].
 
+** Managing development environments with pnpm2nix
+
+*** default.nix
+#+begin_src nix
+{ linkDevDependencies ? false }:
+with (import <nixpkgs> {});
+with (import /path/to/pnpm2nix { inherit pkgs; });
+
+mkPnpmPackage {
+  src = ./.;
+  # Since we are managing a dev environment we also want to link devdependencies into node_modules
+  inherit linkDevDependencies;
+}
+#+END_SRC
+
+*** shell.nix
+#+begin_src nix
+with (import <nixpkgs> {});
+with (import /path/to/pnpm2nix { inherit pkgs; });
+
+mkShell {
+  buildInputs = [
+    (mkPnpmShell (import ./default.nix {
+      linkDevDependencies = true;
+    }))
+  ];
+}
+#+END_SRC
+
 ** Caveats and known bugs
 [[https://github.com/pnpm/pnpm/issues/1035][pnpm does not currently include checksums for tarballs]]
 

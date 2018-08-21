@@ -78,13 +78,13 @@ let
   injectNameVersionAttrs = packageSet: let
 
       getDrvVersionAttr = pkgAttr: (lib.elemAt
-        (builtins.match ".*?/([0-9][A-Za-z\.0-9\.\-]+).*" pkgAttr) 0);
+        (builtins.match ".*/([0-9][A-Za-z\.0-9\.\-]+).*" pkgAttr) 0);
 
       addAttrs = (acc: pkgAttr: acc // (let
         pkg = acc."${pkgAttr}";
       in {
         "${pkgAttr}" = (pkg // rec {
-          rawPname = lib.elemAt (builtins.match "(/|)(.+?)/[0-9].*" pkgAttr) 1;
+          rawPname = lib.elemAt (builtins.match "/?(.+)/[0-9].*" pkgAttr) 0;
           pname = if (lib.hasAttr "name" pkg)
             then pkg.name
             else rawPname;

@@ -28,8 +28,20 @@ let
 
 in {
 
-  mkPnpmShell = drv: makeSetupHook { deps = drv.buildInputs; } (writeScript "pnpm-env-hook.sh" ''
-    export NODE_PATH=${lib.getLib drv}/node_modules
+  mkPnpmEnv = drv: let
+    envDrv = drv.overrideAttrs(oldAttrs: {
+      src = lib.cleanSourceWith {
+        filter = (name: type: baseNameOf (toString name) == "package.json");
+        src = oldAttrs.src; };
+      outputs = [ "out" ];
+      buildPhase = "true";
+      installPhase = ''
+        mkdir -p $out
+        mv node_modules $out
+      '';
+    });
+  in makeSetupHook { deps = envDrv.buildInputs; } (writeScript "pnpm-env-hook.sh" ''
+    export NODE_PATH=${lib.getLib envDrv}/node_modules
   '');
 
   mkPnpmPackage = {

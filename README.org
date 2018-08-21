@@ -22,14 +22,11 @@ More comprehensive examples can be found in the [[file://tests/][tests]].
 
 *** default.nix
 #+begin_src nix
-{ linkDevDependencies ? false }:
 with (import <nixpkgs> {});
 with (import /path/to/pnpm2nix { inherit pkgs; });
 
 mkPnpmPackage {
   src = ./.;
-  # Since we are managing a dev environment we also want to link devdependencies into node_modules
-  inherit linkDevDependencies;
 }
 #+END_SRC
 
@@ -40,9 +37,7 @@ with (import /path/to/pnpm2nix { inherit pkgs; });
 
 mkShell {
   buildInputs = [
-    (mkPnpmShell (import ./default.nix {
-      linkDevDependencies = true;
-    }))
+    (mkPnpmEnv (import ./default.nix))
   ];
 }
 #+END_SRC

@@ -21,7 +21,7 @@ in {
     linkDevDependencies,
   }: stdenv.mkDerivation (attrs //  {
 
-    outputs = [ "out" "lib" ];
+    outputs = attrs.outputs or [ "out" "lib" ];
 
     # Only bin outputs specified in package.json should be patched
     # Trying to reduce some closure size
@@ -36,13 +36,17 @@ in {
 
     checkInputs = devDependencies;
 
+    passthru = {
+      inherit nodejs;
+    };
+
     checkPhase = let
       runTestScript = scriptName: ''
         if ${hasScript scriptName}; then
           PATH="${lib.makeBinPath devDependencies}:$PATH" npm run-script ${scriptName}
         fi
       '';
-    in ''
+    in attrs.checkPhase or ''
       runHook preCheck
       ${runTestScript "pretest"}
       ${runTestScript "test"}
@@ -52,7 +56,7 @@ in {
 
     configurePhase = let
       linkDeps = deps ++ lib.optionals linkDevDependencies devDependencies;
-    in ''
+    in attrs.configurePhase or ''
       runHook preConfigure
 
       # Because of the way the bin directive works, specifying both a bin path and setting directories.bin is an error
@@ -77,7 +81,7 @@ in {
       runHook postConfigure
     '';
 
-    buildPhase = ''
+    buildPhase = attrs.buildPhase or ''
       runHook preBuild
 
       # If there is a binding.gyp file and no "install" or "preinstall" script in package.json "install" defaults to "node-gyp rebuild"
@@ -98,7 +102,7 @@ in {
 
     installPhase = let
       linkBinOutputs = "${nodejs.passthru.python}/bin/python ${linkBinOutputsScript}";
-    in ''
+    in attrs.installPhase or ''
       runHook preInstall
 
       mkdir -p "$out/bin" "$lib"

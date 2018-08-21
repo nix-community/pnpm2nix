@@ -14,7 +14,7 @@ let
 
 in {
 
-  mkPnpmDerivation = {
+  mkPnpmDerivation = lib.makeOverridable ({
     attrs ? {},
     devDependencies ? [],
     deps ? [],
@@ -115,6 +115,6 @@ in {
 
       runHook postInstall
       '';
-  });
+  }));
 
 }

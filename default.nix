@@ -29,7 +29,7 @@ let
 in {
 
   mkPnpmEnv = drv: let
-    envDrv = drv.overrideAttrs(oldAttrs: {
+    envDrv = (drv.override {linkDevDependencies = true;}).overrideAttrs(oldAttrs: {
       src = lib.cleanSourceWith {
         filter = (name: type: baseNameOf (toString name) == "package.json");
         src = oldAttrs.src; };

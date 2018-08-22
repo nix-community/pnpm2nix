@@ -28,8 +28,18 @@ let
 
 in {
 
+  # Create a nix-shell friendly development environment
   mkPnpmEnv = drv: let
     envDrv = (drv.override {linkDevDependencies = true;}).overrideAttrs(oldAttrs: {
+      propagatedBuildInputs = [
+        # Avoid getting npm and its deps in environment
+        (drv.passthru.nodejs.override { enableNpm = false; })
+        # Users probably want pnpm
+        nodePackages.pnpm
+      ];
+      # Remove original nodejs from inputs, it's now propagated and stripped from npm
+      buildInputs = builtins.filter (x: x != drv.passthru.nodejs) oldAttrs.buildInputs;
+      # Only keep package.json from sources, we dont need the rest to make the env
       src = lib.cleanSourceWith {
         filter = (name: type: baseNameOf (toString name) == "package.json");
         src = oldAttrs.src; };
@@ -40,7 +50,9 @@ in {
         mv node_modules $out
       '';
     });
-  in makeSetupHook { deps = envDrv.buildInputs; } (writeScript "pnpm-env-hook.sh" ''
+  in makeSetupHook {
+    deps = envDrv.buildInputs ++ envDrv.propagatedBuildInputs;
+  } (writeScript "pnpm-env-hook.sh" ''
     export NODE_PATH=${lib.getLib envDrv}/node_modules
   '');
 

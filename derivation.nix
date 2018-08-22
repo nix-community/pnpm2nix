@@ -29,6 +29,8 @@ in {
 
     nativeBuildInputs = with pkgs; [ pkgconfig ];
 
+    propagatedBuildInputs = [];
+
     buildInputs = [ nodejs nodejs.passthru.python node-gyp ]
       ++ lib.optionals (lib.hasAttr "buildInputs" attrs) attrs.buildInputs
       ++ lib.optionals linkDevDependencies devDependencies

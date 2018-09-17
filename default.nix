@@ -98,6 +98,10 @@ in {
           src = pkgPath;
           packageJSON = pkgPath + "/package.json";
           shrinkwrapYML = pkgPath + "/shrinkwrap.yaml";
+          # Remove node_modules if present, cant figure out filterSource right now
+          preConfigure = ''
+            rm -rf node_modules
+          '';
         };
       in pkg) revSpecifiers;
     in nonLocalPackages // localPackages;

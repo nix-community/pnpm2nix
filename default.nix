@@ -2,7 +2,7 @@
 , nodejs ? pkgs.nodejs-8_x
 , nodePackages ? pkgs.nodePackages_8_x
 , node-gyp ? nodePackages.node-gyp
-}:
+} @modArgs:
 
 # Scope mkPnpmDerivation
 with (import ./derivation.nix {
@@ -78,10 +78,29 @@ in {
     in rewriteShrinkWrap shrink;
 
     # Convert pnpm package entries to nix derivations
-    packages = lib.mapAttrs (n: v: (let
-      drv = mkPnpmModule n v;
-      overriden = overrideDrv overrides drv;
-    in overriden)) shrinkwrap.packages;
+    packages = let
+      nonLocalPackages = lib.mapAttrs (n: v: (let
+        drv = mkPnpmModule n v;
+        overriden = overrideDrv overrides drv;
+      in overriden)) shrinkwrap.packages;
+      # Local (link:) packages
+      localPackages = let
+        attrNames = builtins.filter (a: lib.hasPrefix "link:" a) shrinkwrap.dependencies;
+        # Get back original module names
+        specifiers = lib.filterAttrs (n: v: lib.elem v attrNames) shrinkwrap.specifiers;
+        # Reverse name/values so the rewritten shrinkwrap can find derivations
+        revSpecifiers = lib.listToAttrs
+          (lib.mapAttrsToList (n: v: lib.nameValuePair v n) specifiers);
+      in lib.mapAttrs (n: v: let
+        # Note: src can only be local path for link: dependencies
+        pkgPath = src + "/" + (lib.removePrefix "link:" n);
+        pkg = (import ./default.nix modArgs).mkPnpmPackage {
+          src = pkgPath;
+          packageJSON = pkgPath + "/package.json";
+          shrinkwrapYML = pkgPath + "/shrinkwrap.yaml";
+        };
+      in pkg) revSpecifiers;
+    in nonLocalPackages // localPackages;
 
     mkPnpmModule = pkgName: pkgInfo: let
       integrity = lib.splitString "-" pkgInfo.resolution.integrity;

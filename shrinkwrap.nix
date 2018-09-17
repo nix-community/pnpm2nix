@@ -192,6 +192,13 @@ let
 
   # Something something
   breakCircular = dependencyAttributes: packageSet: let
+
+    # Local (link:) dependencies are different in that they are treated at separate nix derivations
+    # and they are not present in the shrinkwrap (acc attribute)
+    #
+    # Filter them out and let each sub-derivation deal with circular dependencies on their own
+    nonLocalDependencyAttrs = builtins.filter (a: !(lib.hasPrefix "link:" a)) dependencyAttributes;
+
     walkGraph = (pkgAttr: visitStack: acc: let
       # Scope the current entry for convenience
       entry = acc."${pkgAttr}";
@@ -240,9 +247,14 @@ let
     in if hasDeps then reducedNodes else rewrittenSet);
 
   in lib.foldl (acc: attrName: acc //
-    (walkGraph attrName [] acc)) packageSet dependencyAttributes;
+    (walkGraph attrName [] acc)) packageSet nonLocalDependencyAttrs;
 
   rewriteGraph = shrinkwrap: lib.foldl (acc: fn: fn acc) shrinkwrap [
+
+    # A bare bones project might not have the packages attribute
+    (shrinkwrap: shrinkwrap // {
+      packages = if (lib.hasAttr "packages" shrinkwrap) then shrinkwrap.packages else {};
+    })
 
     # Inject pname, version etc attributes
     (shrinkwrap: shrinkwrap // {

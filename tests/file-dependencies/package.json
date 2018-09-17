@@ -1,0 +1,15 @@
+{
+  "name": "test-filedeps",
+  "version": "0.0.1",
+  "description": "Licking toads is great fun for the whole family",
+  "bin": {
+    "test-module": "test-module.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "ret-42": "link:local_modules/ret-42"
+  }
+}

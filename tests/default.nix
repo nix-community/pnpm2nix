@@ -21,6 +21,7 @@ let
   web3 = importTest ./web3;
   issue-1 = importTest ./issues/1;
   test-falsy-script = importTest ./test-falsy-script;
+  test-filedeps = importTest ./file-dependencies;
 
   mkTest = (name: test: pkgs.runCommandNoCC "${name}" { } (''
     mkdir $out
@@ -101,6 +102,11 @@ lib.listToAttrs (map (drv: nameValuePair drv.name drv) [
   # Ensure package with falsy script (async-lock) builds
   (mkTest "test-falsy-scripts" ''
     echo ${test-falsy-script}
+  '')
+
+  # Test module local (file dependencies)
+  (mkTest "test-filedeps" ''
+    ${test-filedeps}/bin/test-module
   '')
 
 ])

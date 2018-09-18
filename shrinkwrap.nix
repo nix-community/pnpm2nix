@@ -241,7 +241,7 @@ let
       reducedNodes = let
         addedVisit = visitStack ++ [ pkgAttr ];
       in
-      assert !hasCycle;
+      # assert !hasCycle;
       lib.foldl (a: depAttr: walkGraph depAttr addedVisit a) rewrittenSet deps;
 
     in if hasDeps then reducedNodes else rewrittenSet);

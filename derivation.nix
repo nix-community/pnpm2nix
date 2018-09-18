@@ -50,35 +50,64 @@ in {
       '';
     in attrs.checkPhase or ''
       runHook preCheck
-      ${runTestScript "pretest"}
-      ${runTestScript "test"}
-      ${runTestScript "posttest"}
+
+      for constituent in ''${constituents}; do
+        cd "''${constituent}"
+        ${runTestScript "pretest"}
+        ${runTestScript "test"}
+        ${runTestScript "posttest"}
+        cd "''${build_dir}"
+      done
+
       runHook postCheck
+    '';
+
+    sourceRoot = ".";
+    postUnpack = ''
+      mkdir -p node_modules
+      mv pnpm2nix-source-*/* node_modules/
+      rm -r pnpm2nix-source-*
     '';
 
     configurePhase = let
       linkDeps = deps ++ lib.optionals linkDevDependencies devDependencies;
+      linkDep = dep: ''
+        ls -d ${lib.getLib dep}/node_modules/* ${lib.getLib dep}/node_modules/@*/* | grep -Pv '(@[^/]+)$' | while read module; do
+          if test ! -L "$module"; then
+            # Check for nested directories (npm calls this scopes)
+            if test "$(echo "$module" | grep -o '@')" = '@'; then
+              outdir=$(dirname node_modules/${dep.pname})
+              mkdir -p "$outdir"
+              ln -s "$module" $outdir/$(basename "$module")
+            else
+              ln -s "$module" node_modules/$(basename "$module")
+            fi
+          fi
+        done
+      '';
     in attrs.configurePhase or ''
       runHook preConfigure
 
-      # Because of the way the bin directive works, specifying both a bin path and setting directories.bin is an error
-      if test `${pkgs.jq}/bin/jq '(.directories | has("bin")) and has("bin")' < package.json` = true; then
-        echo "package.json had both bin and directories.bin (see https://docs.npmjs.com/files/package.json#directoriesbin)"
-      fi
-
-      # node-gyp writes to $HOME
-      export HOME="$TEMPDIR"
+      export constituents=$(ls -d node_modules/* node_modules/@*/* | grep -Pv '(@[^/]+)$')
+      export build_dir=$(pwd)
 
       # Prevent gyp from going online (no matter if invoked by us or by package.json)
       export npm_config_nodedir="${nodejs}"
 
-      # Link dependencies into node_modules
-      mkdir -p node_modules
-      ${lib.concatStringsSep "\n" (map (dep: "mkdir -p $(dirname node_modules/${dep.pname}) && ln -s ${lib.getLib dep} node_modules/${dep.pname}") linkDeps)}
+      # node-gyp writes to $HOME
+      export HOME="$TEMPDIR"
 
-      if ${hasScript "preinstall"}; then
-        npm run-script preinstall
-      fi
+      # Link dependencies into node_modules
+
+      ${lib.concatStringsSep "\n" (map linkDep linkDeps)}
+
+      for constituent in ''${constituents}; do
+        cd "''${constituent}"
+        if ${hasScript "preinstall"}; then
+          npm run-script preinstall
+        fi
+        cd "''${build_dir}"
+      done
 
       runHook postConfigure
     '';
@@ -86,18 +115,22 @@ in {
     buildPhase = attrs.buildPhase or ''
       runHook preBuild
 
-      # If there is a binding.gyp file and no "install" or "preinstall" script in package.json "install" defaults to "node-gyp rebuild"
-      if ${hasScript "install"}; then
-        npm run-script install
-      elif ${hasScript "preinstall"}; then
-        true
-      elif [ -f ./binding.gyp ]; then
-        ${nodePackages.node-gyp}/bin/node-gyp rebuild
-      fi
+      for constituent in ''${constituents}; do
+        cd "''${constituent}"
+        # If there is a binding.gyp file and no "install" or "preinstall" script in package.json "install" defaults to "node-gyp rebuild"
+        if ${hasScript "install"}; then
+          npm run-script install
+        elif ${hasScript "preinstall"}; then
+          true
+        elif [ -f ./binding.gyp ]; then
+          ${nodePackages.node-gyp}/bin/node-gyp rebuild
+        fi
 
-      if ${hasScript "postinstall"}; then
-        npm run-script postinstall
-      fi
+        if ${hasScript "postinstall"}; then
+          npm run-script postinstall
+        fi
+        cd "''${build_dir}"
+      done
 
       runHook postBuild
     '';
@@ -108,11 +141,13 @@ in {
       runHook preInstall
 
       mkdir -p "$out/bin" "$lib"
-      cp -a * $lib/
+      mv node_modules $lib/
 
       # Create bin outputs
-      ${linkBinOutputs} "$out/bin/" "$lib" ./package.json | while read bin_in; do
-        patchShebangs "$bin_in"
+      for constituent in ''${constituents}; do
+        ${linkBinOutputs} "$out/bin/" "$lib/$constituent" | while read bin_in; do
+          patchShebangs "$bin_in"
+        done
       done
 
       runHook postInstall

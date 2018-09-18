@@ -13,9 +13,6 @@ argparser.add_argument(
 argparser.add_argument(
     'lib_out', type=str,
     help='lib output path')
-argparser.add_argument(
-    'package_json', type=str,
-    help='package.json path')
 
 
 def get_bin_attr_files(package_json):
@@ -51,7 +48,7 @@ def resolve_bin_outputs(bin_out, lib_out, entries):
 if __name__ == '__main__':
     args = argparser.parse_args()
 
-    with open(args.package_json, 'r') as f:
+    with open(os.path.join(args.lib_out, 'package.json')) as f:
         package_json = json.load(f)
 
     for fout, fin in resolve_bin_outputs(

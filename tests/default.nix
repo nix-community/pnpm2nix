@@ -22,6 +22,7 @@ let
   issue-1 = importTest ./issues/1;
   test-falsy-script = importTest ./test-falsy-script;
   test-filedeps = importTest ./file-dependencies;
+  test-circular = importTest ./test-circular;
 
   mkTest = (name: test: pkgs.runCommandNoCC "${name}" { } (''
     mkdir $out
@@ -65,7 +66,7 @@ lib.listToAttrs (map (drv: nameValuePair drv.name drv) [
 
   # Check if peer dependencies are resolved
   (mkTest "peerdependencies" ''
-    winstonPeer=$(readlink -f ${lib.getLib test-peerdependencies}/node_modules/winston-logstash/node_modules/winston)
+    winstonPeer=$(readlink -f ${lib.getLib test-peerdependencies}/node_modules/winston-logstash/../winston)
     winstonRoot=$(readlink -f ${lib.getLib test-peerdependencies}/node_modules/winston)
 
     test "''${winstonPeer}" = "''${winstonRoot}" || (echo "Different versions in root and peer dependency resolution"; exit 1)
@@ -83,7 +84,7 @@ lib.listToAttrs (map (drv: nameValuePair drv.name drv) [
   # Check if checkPhase is being run correctly
   (mkTest "devdependencies" ''
     for testScript in "pretest" "test" "posttest"; do
-      test -f ${test-devdependencies}/build/''${testScript}
+      test -f ${lib.getLib test-devdependencies}/node_modules/test-devdependencies/build/''${testScript}
     done
   '')
 
@@ -107,6 +108,11 @@ lib.listToAttrs (map (drv: nameValuePair drv.name drv) [
   # Test module local (file dependencies)
   (mkTest "test-filedeps" ''
     ${test-filedeps}/bin/test-module
+  '')
+
+  # Test circular dependencies are broken up and still works
+  (mkTest "test-circular" ''
+    HOME=$(mktemp -d) ${test-circular}/bin/test-circular
   '')
 
 ])

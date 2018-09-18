@@ -66,7 +66,7 @@ in {
     ...
   } @args:
   let
-    specialAttrs = [ "packageJSON" "shrinkwrapYML" "overrides" "allowImpure" ];
+    specialAttrs = [ "src" "packageJSON" "shrinkwrapYML" "overrides" "allowImpure" ];
 
     package = lib.importJSON packageJSON;
     pname = package.name;
@@ -79,10 +79,13 @@ in {
 
     # Convert pnpm package entries to nix derivations
     packages = let
+
+      # Normal (registry/git) packages
       nonLocalPackages = lib.mapAttrs (n: v: (let
-        drv = mkPnpmModule n v;
+        drv = mkPnpmModule v;
         overriden = overrideDrv overrides drv;
       in overriden)) shrinkwrap.packages;
+
       # Local (link:) packages
       localPackages = let
         attrNames = builtins.filter (a: lib.hasPrefix "link:" a) shrinkwrap.dependencies;
@@ -94,46 +97,80 @@ in {
       in lib.mapAttrs (n: v: let
         # Note: src can only be local path for link: dependencies
         pkgPath = src + "/" + (lib.removePrefix "link:" n);
-        pkg = (import ./default.nix modArgs).mkPnpmPackage {
+        pkg = ((import ./default.nix modArgs).mkPnpmPackage {
           src = pkgPath;
           packageJSON = pkgPath + "/package.json";
           shrinkwrapYML = pkgPath + "/shrinkwrap.yaml";
-          # Remove node_modules if present, cant figure out filterSource right now
-          preConfigure = ''
-            rm -rf node_modules
-          '';
-        };
+        }).overrideAttrs(oldAttrs: {
+          src = wrapRawSrc pkgPath oldAttrs.pname;
+        });
       in pkg) revSpecifiers;
     in nonLocalPackages // localPackages;
 
-    mkPnpmModule = pkgName: pkgInfo: let
+    # fetchzip relies on hashing the output NAR and we only have the tarball/zip hash
+    # Wrap in a derivation to get output from source package using only tarball hash
+    wrapFetchUrl = src: stdenv.mkDerivation {
+      name = "pnpm2nix-source";
+      inherit src;
+      dontBuild = true;
+      fixupPhase = ":";
+      installPhase = ''
+        mkdir -p $out
+        cp -a * $out/
+      '';
+    };
+
+    # Wrap sources in a directory named the same as the node_modules/ path
+    wrapRawSrc = src: pname: (stdenv.mkDerivation (let
+      name = lib.replaceStrings [ "@" "/" ] [ "" "-" ] pname;
+    in {
+      name = "pnpm2nix-source-${name}";
+      inherit src;
+      dontBuild = true;
+      fixupPhase = ":";
+      installPhase = ''
+        mkdir -p $out/${pname}
+        cp -a * $out/${pname}/
+      '';
+    }));
+    wrapSrc = pkgInfo: let
       integrity = lib.splitString "-" pkgInfo.resolution.integrity;
       shaType = lib.elemAt integrity 0;
       shaSum = lib.elemAt integrity 1;
-
-      # These attrs have already been created in pre-processing
-      inherit (pkgInfo) pname version name;
-
-      tarball = (lib.lists.last (lib.splitString "/" pname)) + "-" + version + ".tgz";
+      tarball = (lib.lists.last (lib.splitString "/" pkgInfo.pname)) + "-" + pkgInfo.version + ".tgz";
       src = (if (lib.hasAttr "integrity" pkgInfo.resolution) then
-        pkgs.fetchurl {
+        (wrapFetchUrl (pkgs.fetchurl {
           # Note: Tarballs do not have checksums yet
           # https://github.com/pnpm/pnpm/issues/1035
           url = if (lib.hasAttr "tarball" pkgInfo.resolution)
             then pkgInfo.resolution.tarball
-            else "${shrinkwrap.registry}${pname}/-/${tarball}";
+            else "${shrinkwrap.registry}${pkgInfo.pname}/-/${tarball}";
             "${shaType}" = shaSum;
-          } else if allowImpure then fetchTarball {
-            # Once pnpm has integrity sums for tarballs impure builds should be dropped
-            url = pkgInfo.resolution.tarball;
-          } else throw "No download method found");
+        })) else if allowImpure then fetchTarball {
+          url = pkgInfo.resolution.tarball;
+        } else throw "No download method found");
+    in wrapRawSrc src pkgInfo.pname;
 
-      deps = builtins.map (attrName: packages."${attrName}") pkgInfo.dependencies;
+    mkPnpmModule = pkgInfo: let
+      hasCycle = (builtins.length pkgInfo.constituents) > 1;
+
+      # These attrs have already been created in pre-processing
+      # Cyclic dependencies has deterministic ordering so they will end up with the exact same attributes
+      name = lib.concatStringsSep "-" (builtins.map (attr: shrinkwrap.packages."${attr}".name) pkgInfo.constituents);
+      version = if !hasCycle then pkgInfo.version else "cyclic";
+      pname = lib.concatStringsSep "-" (builtins.map (attr: shrinkwrap.packages."${attr}".pname) pkgInfo.constituents);
+
+      srcs = (builtins.map (attr: wrapSrc shrinkwrap.packages."${attr}") pkgInfo.constituents);
+
+      deps = builtins.map (attrName: packages."${attrName}")
+        # Get all dependencies from cycle
+        (lib.unique (lib.flatten (builtins.map
+          (attr: shrinkwrap.packages."${attr}".dependencies) pkgInfo.constituents)));
 
     in
       mkPnpmDerivation {
         inherit deps;
-        attrs = { inherit name src pname version pkgName; };
+        attrs = { inherit name srcs pname version; };
         linkDevDependencies = false;
       };
 
@@ -151,6 +188,7 @@ in {
 
     # Filter "special" attrs we know how to interpret, merge rest to drv attrset
     attrs = ((lib.filterAttrs (k: v: !(lib.lists.elem k specialAttrs)) args) // {
+      srcs = [ (wrapRawSrc src pname) ];
       inherit name pname version;
     });
   });

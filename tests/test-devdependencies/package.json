@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "pretest": "touch build/pretest",
+    "pretest": "mkdir -p build && touch build/pretest",
     "test": "mocha --reporter min | grep '1 passing' && touch build/test",
     "posttest": "touch build/posttest"
   },

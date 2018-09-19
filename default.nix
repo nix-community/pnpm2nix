@@ -30,6 +30,7 @@ in {
 
   # Create a nix-shell friendly development environment
   mkPnpmEnv = drv: let
+    pkgJSON = writeText "${drv.name}-package-json" (builtins.toJSON drv.passthru.packageJSON);
     envDrv = (drv.override {linkDevDependencies = true;}).overrideAttrs(oldAttrs: {
       propagatedBuildInputs = [
         # Avoid getting npm and its deps in environment
@@ -37,14 +38,18 @@ in {
         # Users probably want pnpm
         nodePackages.pnpm
       ];
+      srcs = [];
+      src = pkgs.runCommandNoCC "pnpm2nix-dummy-env-src" {} ''
+        mkdir $out
+      '';
       # Remove original nodejs from inputs, it's now propagated and stripped from npm
       buildInputs = builtins.filter (x: x != drv.passthru.nodejs) oldAttrs.buildInputs;
-      # Only keep package.json from sources, we dont need the rest to make the env
-      src = lib.cleanSourceWith {
-        filter = (name: type: baseNameOf (toString name) == "package.json");
-        src = oldAttrs.src; };
       outputs = [ "out" ];
       buildPhase = "true";
+      postUnpack = ''
+        mkdir -p node_modules/${oldAttrs.pname}
+        ln -s ${pkgJSON} node_modules/${oldAttrs.pname}/package.json
+      '';
       installPhase = ''
         mkdir -p $out
         mv node_modules $out
@@ -174,6 +179,10 @@ in {
       (attrName: packages."${attrName}") shrinkwrap.devDependencies;
 
     inherit linkDevDependencies;
+
+    passthru = {
+      packageJSON = package;
+    };
 
     # Filter "special" attrs we know how to interpret, merge rest to drv attrset
     attrs = ((lib.filterAttrs (k: v: !(lib.lists.elem k specialAttrs)) args) // {

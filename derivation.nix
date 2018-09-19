@@ -19,6 +19,7 @@ in {
     devDependencies ? [],
     deps ? [],
     linkDevDependencies,
+    passthru ? {},
   }: stdenv.mkDerivation (attrs //  {
 
     outputs = attrs.outputs or [ "out" "lib" ];
@@ -38,7 +39,7 @@ in {
 
     checkInputs = devDependencies;
 
-    passthru = {
+    passthru = passthru // {
       inherit nodejs;
     };
 

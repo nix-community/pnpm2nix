@@ -114,6 +114,7 @@ in {
       name = "pnpm2nix-source-${name}";
       inherit src;
       dontBuild = true;
+      configurePhase = ":";
       fixupPhase = ":";
       installPhase = ''
         mkdir -p $out/${pname}

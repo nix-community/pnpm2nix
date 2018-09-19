@@ -107,19 +107,6 @@ in {
       in pkg) revSpecifiers;
     in nonLocalPackages // localPackages;
 
-    # fetchzip relies on hashing the output NAR and we only have the tarball/zip hash
-    # Wrap in a derivation to get output from source package using only tarball hash
-    wrapFetchUrl = src: stdenv.mkDerivation {
-      name = "pnpm2nix-source";
-      inherit src;
-      dontBuild = true;
-      fixupPhase = ":";
-      installPhase = ''
-        mkdir -p $out
-        cp -a * $out/
-      '';
-    };
-
     # Wrap sources in a directory named the same as the node_modules/ path
     wrapRawSrc = src: pname: (stdenv.mkDerivation (let
       name = lib.replaceStrings [ "@" "/" ] [ "" "-" ] pname;
@@ -139,14 +126,15 @@ in {
       shaSum = lib.elemAt integrity 1;
       tarball = (lib.lists.last (lib.splitString "/" pkgInfo.pname)) + "-" + pkgInfo.version + ".tgz";
       src = (if (lib.hasAttr "integrity" pkgInfo.resolution) then
-        (wrapFetchUrl (pkgs.fetchurl {
-          # Note: Tarballs do not have checksums yet
-          # https://github.com/pnpm/pnpm/issues/1035
+        (pkgs.fetchurl {
           url = if (lib.hasAttr "tarball" pkgInfo.resolution)
             then pkgInfo.resolution.tarball
             else "${shrinkwrap.registry}${pkgInfo.pname}/-/${tarball}";
             "${shaType}" = shaSum;
-        })) else if allowImpure then fetchTarball {
+        }) else if allowImpure then fetchTarball {
+          # Note: Resolved tarballs(github revs for example)
+          # does not yet have checksums
+          # https://github.com/pnpm/pnpm/issues/1035
           url = pkgInfo.resolution.tarball;
         } else throw "No download method found");
     in wrapRawSrc src pkgInfo.pname;

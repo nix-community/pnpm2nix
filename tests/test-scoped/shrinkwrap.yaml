@@ -1,0 +1,46 @@
+dependencies:
+  '@most/hold': 3.0.0
+packages:
+  /@most/core/0.13.0:
+    dependencies:
+      '@most/disposable': 0.13.1
+      '@most/prelude': 1.7.2
+      '@most/scheduler': 0.13.1
+      '@most/types': 0.11.1
+    dev: false
+    resolution:
+      integrity: sha512-R1hR/B+GGFfmKvILe/1IAnZn5f7/pRiw27Oucxx5+DrSpaR06cE6YHJ1G9KP9GqB/VzM2fidzia+8UsbdsZVxw==
+  /@most/disposable/0.13.1:
+    dependencies:
+      '@most/prelude': 1.7.2
+      '@most/types': 0.11.1
+    dev: false
+    resolution:
+      integrity: sha512-2Z89nEjdEJ6RvCzwyWZK6xv2avt2gY2NSkceemOQ869ggGDB2ZFA/ZMuyZag2KVoCyjb9zMOhfOgQw1gD/m9QA==
+  /@most/hold/3.0.0:
+    dependencies:
+      '@most/core': 0.13.0
+      '@most/types': 0.11.1
+    dev: false
+    resolution:
+      integrity: sha512-bnH6EPXiSJ/ZUGc0N7k1KbIBnPQk6cmdrcSAMWLeLwyDVQiwjhH3GgDzcoCiJ8pkVSG0QI8oe4igmOdHq+KrOg==
+  /@most/prelude/1.7.2:
+    dev: false
+    resolution:
+      integrity: sha512-GM5ec7+xpkuXiCMyzhyENgH/xZ8t0nAMDBY0QOsVVD6TrZYjJKUnW1eaI18HHX8W+COWMwWR9c0zoPiBp9+tUg==
+  /@most/scheduler/0.13.1:
+    dependencies:
+      '@most/prelude': 1.7.2
+      '@most/types': 0.11.1
+    dev: false
+    resolution:
+      integrity: sha512-t14TLvEfUYPSLJQSLT/V5bQYxvKdLib8KFrz0hniOHZRoqyBgt6zhHKP1zywrEYQd9+sdhS5SZDnX9wAJ+xJxg==
+  /@most/types/0.11.1:
+    dev: false
+    resolution:
+      integrity: sha512-acP+xy7F4W50GAbpOmfdNgATPwCfMUSLmWEhUb4MHli9k0qAtN828LTVPgK3AsTBh/Fkx0TulbgW+H2t06BsKA==
+registry: 'https://registry.npmjs.org/'
+shrinkwrapMinorVersion: 7
+shrinkwrapVersion: 3
+specifiers:
+  '@most/hold': ^3.0.0

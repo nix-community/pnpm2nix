@@ -23,6 +23,7 @@ let
   test-falsy-script = importTest ./test-falsy-script;
   test-filedeps = importTest ./file-dependencies;
   test-circular = importTest ./test-circular;
+  test-scoped = importTest ./test-scoped;
 
   mkTest = (name: test: pkgs.runCommandNoCC "${name}" { } (''
     mkdir $out
@@ -113,6 +114,11 @@ lib.listToAttrs (map (drv: nameValuePair drv.name drv) [
   # Test circular dependencies are broken up and still works
   (mkTest "test-circular" ''
     HOME=$(mktemp -d) ${test-circular}/bin/test-circular
+  '')
+
+  # Test scoped package
+  (mkTest "test-scoped" ''
+    ${test-scoped}/bin/test-scoped
   '')
 
 ])

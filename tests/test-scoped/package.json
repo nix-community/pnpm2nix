@@ -1,0 +1,17 @@
+{
+  "name": "@test/test-scoped",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "bin": {
+    "test-scoped": "test-scoped.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@most/hold": "^3.0.0"
+  }
+}

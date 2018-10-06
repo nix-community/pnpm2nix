@@ -12,6 +12,10 @@ with pkgs;
 
 let
 
+  # Replace disallowed characters from package name
+  # @acme/package -> acme-package
+  safePkgName = name: builtins.replaceStrings ["@" "/"] ["" "-"] name;
+
   rewriteShrinkWrap = import ./shrinkwrap.nix {
     inherit pkgs nodejs nodePackages;
   };
@@ -74,7 +78,7 @@ in {
     specialAttrs = [ "src" "packageJSON" "shrinkwrapYML" "overrides" "allowImpure" ];
 
     package = lib.importJSON packageJSON;
-    pname = package.name;
+    pname = safePkgName package.name;
     version = package.version;
     name = pname + "-" + version;
 

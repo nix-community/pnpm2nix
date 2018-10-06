@@ -118,7 +118,7 @@ in {
 
     # Wrap sources in a directory named the same as the node_modules/ path
     wrapRawSrc = src: pname: (stdenv.mkDerivation (let
-      name = lib.replaceStrings [ "@" "/" ] [ "" "-" ] pname;
+      name = safePkgName pname;
     in {
       name = "pnpm2nix-source-${name}";
       inherit src;

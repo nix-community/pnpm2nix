@@ -30,7 +30,13 @@ let
       (overrides."${drv.pname}" drv)
         else drv);
 
+  defaultPnpmOverrides = import ./overrides.nix {
+    inherit pkgs nodejs nodePackages;
+  };
+
 in {
+
+  inherit defaultPnpmOverrides;
 
   # Create a nix-shell friendly development environment
   mkPnpmEnv = drv: let
@@ -69,7 +75,7 @@ in {
     src,
     packageJSON ? src + "/package.json",
     shrinkwrapYML ? src + "/shrinkwrap.yaml",
-    overrides ? {},
+    overrides ? defaultPnpmOverrides,
     allowImpure ? false,
     linkDevDependencies ? false,
     ...

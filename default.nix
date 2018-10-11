@@ -95,6 +95,8 @@ in {
     # Convert pnpm package entries to nix derivations
     packages = let
 
+      linkPath = src: link: src + ("/" + (lib.removePrefix "link:" link));
+
       # Normal (registry/git) packages
       nonLocalPackages = lib.mapAttrs (n: v: (let
         drv = mkPnpmModule v;
@@ -104,14 +106,15 @@ in {
       # Local (link:) packages
       localPackages = let
         attrNames = builtins.filter (a: lib.hasPrefix "link:" a) shrinkwrap.dependencies;
-        # Get back original module names
-        specifiers = lib.filterAttrs (n: v: lib.elem v attrNames) shrinkwrap.specifiers;
-        # Reverse name/values so the rewritten shrinkwrap can find derivations
-        revSpecifiers = lib.listToAttrs
-          (lib.mapAttrsToList (n: v: lib.nameValuePair v n) specifiers);
+
+        # Try to resolve relative path and import package.json to read package name
+        resolvePkgName = (link: (lib.importJSON ((linkPath src link) + "/package.json")).name);
+        resolve = (link: lib.nameValuePair link (resolvePkgName link));
+        resolvedSpecifiers = lib.listToAttrs (map (resolve) attrNames);
+
       in lib.mapAttrs (n: v: let
         # Note: src can only be local path for link: dependencies
-        pkgPath = src + "/" + (lib.removePrefix "link:" n);
+        pkgPath = linkPath src n;
         pkg = ((import ./default.nix modArgs).mkPnpmPackage {
           src = pkgPath;
           packageJSON = pkgPath + "/package.json";
@@ -119,7 +122,7 @@ in {
         }).overrideAttrs(oldAttrs: {
           src = wrapRawSrc pkgPath oldAttrs.pname;
         });
-      in pkg) revSpecifiers;
+      in pkg) resolvedSpecifiers;
     in nonLocalPackages // localPackages;
 
     # Wrap sources in a directory named the same as the node_modules/ path

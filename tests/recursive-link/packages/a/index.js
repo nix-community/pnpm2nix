@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const b = require("b");
 const c = require("c");
 

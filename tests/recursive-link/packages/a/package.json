@@ -1,0 +1,13 @@
+{
+  "name": "a",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "ISC",
+  "bin": {
+    "test-recursive-link": "index.js"
+  },
+  "dependencies": {
+     "b": "1.0.0",
+     "c": "1.0.0"
+  }
+}

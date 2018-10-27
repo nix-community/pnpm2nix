@@ -24,6 +24,7 @@ let
   test-filedeps = importTest ./file-dependencies;
   test-circular = importTest ./test-circular;
   test-scoped = importTest ./test-scoped;
+  test-recursive-link = importTest ./recursive-link/packages/a;
 
   mkTest = (name: test: pkgs.runCommandNoCC "${name}" { } (''
     mkdir $out
@@ -119,6 +120,11 @@ lib.listToAttrs (map (drv: nameValuePair drv.name drv) [
   # Test scoped package
   (mkTest "test-scoped" ''
     ${test-scoped}/bin/test-scoped
+  '')
+
+  # Test pnpm workspace recursive linked packages
+  (mkTest "test-recursive-link" ''
+    ${test-recursive-link}/bin/test-recursive-link
   '')
 
 ])

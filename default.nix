@@ -155,7 +155,7 @@ in {
           # does not yet have checksums
           # https://github.com/pnpm/pnpm/issues/1035
           url = pkgInfo.resolution.tarball;
-        } else throw "No download method found");
+        } else throw "No download method found for package ${pkgInfo.name}, consider adding `allowImpure = true;`");
     in wrapRawSrc src pkgInfo.pname;
 
     mkPnpmModule = pkgInfo: let

@@ -56,6 +56,9 @@ if __name__ == '__main__':
                 get_bin_attr_files(package_json),
                 get_directories_bin_attr_files(args.lib_out, package_json))):
 
+        fin = fin.encode("utf-8");
+        fout = fout.encode("utf-8");
+
         os.symlink(fin, fout)
         os.chmod(fout, 0o755)
 

@@ -1,7 +1,5 @@
 dependencies:
   ret-42: 'link:local_modules/ret-42'
-registry: 'https://registry.npmjs.org/'
-shrinkwrapMinorVersion: 9
-shrinkwrapVersion: 3
+lockfileVersion: 5
 specifiers:
   ret-42: 'link:local_modules/ret-42'

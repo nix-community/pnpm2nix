@@ -1,7 +1,0 @@
-dependencies:
-  c: 'link:../c'
-registry: 'https://registry.npmjs.org/'
-shrinkwrapMinorVersion: 7
-shrinkwrapVersion: 3
-specifiers:
-  c: 1.0.0

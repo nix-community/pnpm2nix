@@ -174,7 +174,7 @@ let
       packageSet = shrinkwrap.packages;
 
       rewriteAttrs = attr: let
-        attrSet = if (lib.hasAttr attr shrinkwrap)
+        attrSet = if (lib.hasAttr attr shrinkwrap && shrinkwrap."${attr}" != null)
           then shrinkwrap."${attr}"
           else {};
       in lib.mapAttrsToList (depName: depVersion:

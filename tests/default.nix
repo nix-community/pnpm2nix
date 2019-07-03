@@ -76,11 +76,10 @@ lib.listToAttrs (map (drv: nameValuePair drv.name drv) [
 
   # Test a "weird" package with -beta in version number spec
   (let
-    web3Drv = lib.elemAt (lib.filter (x: x.name == "web3-1.0.0-beta.30") web3.buildInputs) 0;
-
+    web3Drv = lib.elemAt (lib.filter (x: x.name == "web3-1.0.0-beta.55") web3.buildInputs) 0;
   in mkTest "test-beta-names" ''
-    test "${web3Drv.name}" = "web3-1.0.0-beta.30" || (echo "web3 name mismatch"; exit 1)
-    test "${web3Drv.version}" = "1.0.0-beta.30" || (echo "web3 version mismatch"; exit 1)
+    test "${web3Drv.name}" = "web3-1.0.0-beta.55" || (echo "web3 name mismatch"; exit 1)
+    test "${web3Drv.version}" = "1.0.0-beta.55" || (echo "web3 version mismatch"; exit 1)
   '')
 
   # Check if checkPhase is being run correctly

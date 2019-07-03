@@ -12,7 +12,7 @@ let
     };
 
     packageJSON = ./package.json;
-    shrinkwrapYML = ./shrinkwrap.yaml;
+    pnpmLock = ./pnpm-lock.yaml;
   };
 
 in package

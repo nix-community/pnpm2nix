@@ -1,0 +1,10 @@
+dependencies:
+  '@types/node': 9.6.49
+lockfileVersion: 5
+packages:
+  /@types/node/9.6.49:
+    dev: false
+    resolution:
+      integrity: sha512-YY0Okyn4QXC4ugJI+Kng5iWjK8A6eIHiQVaGIhJkyn0YL6Iqo0E0tBC8BuhvYcBK87vykBijM5FtMnCqaa5anA==
+specifiers:
+  '@types/node': ^9.4.6

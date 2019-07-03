@@ -1,0 +1,16 @@
+importers:
+  packages/a:
+    dependencies:
+      b: 'link:../b'
+      c: 'link:../c'
+    specifiers:
+      b: 1.0.0
+      c: 1.0.0
+  packages/b:
+    dependencies:
+      c: 'link:../c'
+    specifiers:
+      c: 1.0.0
+  packages/c:
+    specifiers: {}
+lockfileVersion: 5

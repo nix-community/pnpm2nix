@@ -1,6 +1,7 @@
 dependencies:
-  winston: 2.4.0
+  winston: 2.4.4
   winston-logstash: 0.4.0
+lockfileVersion: 5
 packages:
   /async/1.0.0:
     dev: false
@@ -40,7 +41,7 @@ packages:
       winston: '>=0.7.3'
     resolution:
       integrity: sha512-P31aKNVlgPWBWH5Q1mpa/S871bzofFF708FwjncU4vhxXfSJCVFC48yEk/iBgXCK4OlZkXtBxzRPEE+3dAdbEA==
-  /winston/2.4.0:
+  /winston/2.4.4:
     dependencies:
       async: 1.0.0
       colors: 1.0.3
@@ -52,10 +53,7 @@ packages:
     engines:
       node: '>= 0.10.0'
     resolution:
-      integrity: sha1-gIBQuT1SZh7Z+2wms/DIJnCLCu4=
-registry: 'https://registry.npmjs.org/'
-shrinkwrapMinorVersion: 4
-shrinkwrapVersion: 3
+      integrity: sha512-NBo2Pepn4hK4V01UfcWcDlmiVTs7VTB1h7bgnB0rgP146bYhMxX0ypCz3lBOfNxCO4Zuek7yeT+y/zM1OfMw4Q==
 specifiers:
   winston: ^2.4.0
   winston-logstash: ^0.4.0

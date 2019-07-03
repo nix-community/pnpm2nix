@@ -16,14 +16,14 @@ let
   # @acme/package -> acme-package
   safePkgName = name: builtins.replaceStrings ["@" "/"] ["" "-"] name;
 
-  rewriteShrinkWrap = import ./shrinkwrap.nix {
+  rewritePnpmLock = import ./pnpmlock.nix {
     inherit pkgs nodejs nodePackages;
   };
 
   importYAML = name: yamlFile: (lib.importJSON ((pkgs.runCommandNoCC name {} ''
     mkdir -p $out
-    ${pkgs.yaml2json}/bin/yaml2json < ${yamlFile} | ${pkgs.jq}/bin/jq -a '.' > $out/shrinkwrap.json
-  '').outPath + "/shrinkwrap.json"));
+    ${pkgs.yaml2json}/bin/yaml2json < ${yamlFile} | ${pkgs.jq}/bin/jq -a '.' > $out/pnpmlock.json
+  '').outPath + "/pnpmlock.json"));
 
   overrideDrv = (overrides: drv:
     if (lib.hasAttr drv.pname overrides) then
@@ -74,23 +74,23 @@ in {
   mkPnpmPackage = {
     src,
     packageJSON ? src + "/package.json",
-    shrinkwrapYML ? src + "/shrinkwrap.yaml",
+    pnpmLock ? src + "/pnpm-lock.yaml",
     overrides ? defaultPnpmOverrides,
     allowImpure ? false,
     linkDevDependencies ? false,
     ...
   } @args:
   let
-    specialAttrs = [ "src" "packageJSON" "shrinkwrapYML" "overrides" "allowImpure" ];
+    specialAttrs = [ "src" "packageJSON" "pnpmLock" "overrides" "allowImpure" ];
 
     package = lib.importJSON packageJSON;
     pname = safePkgName package.name;
     version = package.version;
     name = pname + "-" + version;
 
-    shrinkwrap = let
-      shrink = importYAML "${pname}-shrinkwrap-${version}" shrinkwrapYML;
-    in rewriteShrinkWrap shrink;
+    pnpmlock = let
+      lock = importYAML "${pname}-pnpmlock-${version}" pnpmLock;
+    in rewritePnpmLock lock;
 
     # Convert pnpm package entries to nix derivations
     packages = let
@@ -101,11 +101,11 @@ in {
       nonLocalPackages = lib.mapAttrs (n: v: (let
         drv = mkPnpmModule v;
         overriden = overrideDrv overrides drv;
-      in overriden)) shrinkwrap.packages;
+      in overriden)) pnpmlock.packages;
 
       # Local (link:) packages
       localPackages = let
-        attrNames = builtins.filter (a: lib.hasPrefix "link:" a) shrinkwrap.dependencies;
+        attrNames = builtins.filter (a: lib.hasPrefix "link:" a) pnpmlock.dependencies;
 
         # Try to resolve relative path and import package.json to read package name
         resolvePkgName = (link: (lib.importJSON ((linkPath src link) + "/package.json")).name);
@@ -119,7 +119,7 @@ in {
           inherit allowImpure;
           src = pkgPath;
           packageJSON = pkgPath + "/package.json";
-          shrinkwrapYML = pkgPath + "/shrinkwrap.yaml";
+          pnpmLock = pkgPath + "/pnpm-lock.yaml";
         }).overrideAttrs(oldAttrs: {
           src = wrapRawSrc pkgPath oldAttrs.pname;
         });
@@ -145,11 +145,12 @@ in {
       shaType = lib.elemAt integrity 0;
       shaSum = lib.elemAt integrity 1;
       tarball = (lib.lists.last (lib.splitString "/" pkgInfo.pname)) + "-" + pkgInfo.version + ".tgz";
+      registry = if builtins.hasAttr "registry" pnpmlock then pnpmlock.registry else "https://registry.npmjs.org/";
       src = (if (lib.hasAttr "integrity" pkgInfo.resolution) then
         (pkgs.fetchurl {
           url = if (lib.hasAttr "tarball" pkgInfo.resolution)
             then pkgInfo.resolution.tarball
-            else "${shrinkwrap.registry}${pkgInfo.pname}/-/${tarball}";
+            else "${registry}${pkgInfo.pname}/-/${tarball}";
             "${shaType}" = shaSum;
         }) else if allowImpure then fetchTarball {
           # Note: Resolved tarballs(github revs for example)
@@ -164,16 +165,16 @@ in {
 
       # These attrs have already been created in pre-processing
       # Cyclic dependencies has deterministic ordering so they will end up with the exact same attributes
-      name = lib.concatStringsSep "-" (builtins.map (attr: shrinkwrap.packages."${attr}".name) pkgInfo.constituents);
+      name = lib.concatStringsSep "-" (builtins.map (attr: pnpmlock.packages."${attr}".name) pkgInfo.constituents);
       version = if !hasCycle then pkgInfo.version else "cyclic";
-      pname = lib.concatStringsSep "-" (builtins.map (attr: shrinkwrap.packages."${attr}".pname) pkgInfo.constituents);
+      pname = lib.concatStringsSep "-" (builtins.map (attr: pnpmlock.packages."${attr}".pname) pkgInfo.constituents);
 
-      srcs = (builtins.map (attr: wrapSrc shrinkwrap.packages."${attr}") pkgInfo.constituents);
+      srcs = (builtins.map (attr: wrapSrc pnpmlock.packages."${attr}") pkgInfo.constituents);
 
       deps = builtins.map (attrName: packages."${attrName}")
         # Get all dependencies from cycle
         (lib.unique (lib.flatten (builtins.map
-          (attr: shrinkwrap.packages."${attr}".dependencies) pkgInfo.constituents)));
+          (attr: pnpmlock.packages."${attr}".dependencies) pkgInfo.constituents)));
 
     in
       mkPnpmDerivation {
@@ -183,14 +184,14 @@ in {
       };
 
   in
-    assert shrinkwrap.shrinkwrapVersion == 3;
+    assert pnpmlock.lockfileVersion == 5;
   (mkPnpmDerivation {
     deps = (builtins.map
       (attrName: packages."${attrName}")
-      (shrinkwrap.dependencies ++ shrinkwrap.optionalDependencies));
+      (pnpmlock.dependencies ++ pnpmlock.optionalDependencies));
 
     devDependencies = builtins.map
-      (attrName: packages."${attrName}") shrinkwrap.devDependencies;
+      (attrName: packages."${attrName}") pnpmlock.devDependencies;
 
     inherit linkDevDependencies;
 

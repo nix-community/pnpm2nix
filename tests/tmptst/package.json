@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "main": "index.js",
+  "dependencies": {
+    "@0xproject/base-contract": "^2.0.1",
+    "@0xproject/utils": "^1.0.7",
+    "@0xproject/web3-wrapper": "^2.0.1",
+    "ethereum-types": "^1.0.5",
+    "ethers": "^3.0.27",
+    "lodash": "^4.17.10",
+    "sane-subproviders": "github:enumatech/sane-subproviders"
+  },
+  "devDependencies": {
+    "typescript": "^3.0.3"
+  },
+  "name": "trustedkey-contracts"
+}

@@ -5,5 +5,5 @@ with (import ../../. { inherit pkgs; });
 mkPnpmPackage {
   src = ./.;
   packageJSON = ./package.json;
-  shrinkwrapYML = ./shrinkwrap.yaml;
+  pnpmLock = ./pnpm-lock.yaml;
 }

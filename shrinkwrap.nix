@@ -56,11 +56,7 @@ let
       else (_indexOf elem list (idx+1));
   in (elem: list: _indexOf elem list 0);
 
-  # TODO: Reimplement semver parsing in nix
-  satisfiesSemver = version: versionSpec: (lib.importJSON ((pkgs.runCommandNoCC "semver" {} ''
-    env NODE_PATH=${nodePackages.semver}/lib/node_modules ${nodejs}/bin/node -e 'console.log(require("semver").satisfies("${version}", "${versionSpec}"))' > $out
-  '').outPath));
-  versionSpecMatches = (version: versionSpec: satisfiesSemver version versionSpec);
+  semver = import ./semver.nix { inherit pkgs; };
 
   # Extract further required info from attrsets:
   # resolution
@@ -106,7 +102,7 @@ let
       resolve = pname: versionSpec: with builtins; let
          nameMatches = lib.filterAttrs (n: v: v.pname == pname) packageSet;
          matches = lib.filterAttrs (n: v:
-           versionSpecMatches v.version versionSpec) nameMatches;
+           semver.satisfies v.version versionSpec) nameMatches;
          matchPairs =  lib.mapAttrsToList (name: value:
            {inherit name; version = value.version;}) matches;
          sorted = builtins.sort (a: b:

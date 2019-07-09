@@ -1,12 +1,12 @@
 { pkgs
+, lib ? pkgs.lib
 , nodejs
 , nodePackages
 }:
 
-with pkgs;
-
-# Rewrite the shrinkwrap graph to be a DAG and pre-resolve all dependencies to
-# absolute attribute names in the shrinkwrap packages attribute set.
+# Rewrite the pnpm-lock graph to be a DAG and pre-resolve all dependencies to
+# absolute attribute names in the pnpmlock packages attribute set.
+#
 #
 # After rewriting you end up with a datastructure that looks like (JSON):
 # {
@@ -39,8 +39,8 @@ with pkgs;
 #     }
 #   },
 #   "registry": "https://registry.npmjs.org/",
-#   "shrinkwrapMinorVersion": 6,
-#   "shrinkwrapVersion": 3,
+#   "pnpmlockMinorVersion": 6,
+#   "pnpmlockVersion": 3,
 #   "specifiers": {},
 # }
 
@@ -62,9 +62,9 @@ let
   # resolution
 
   # This function sets 4 attributes on each entry
-  # from shrinkwrap.packages:
+  # from pnpmlock.packages:
   #
-  # packageSet: packages from shrinkwrap.yaml
+  # packageSet: packages from pnpmlock.yaml
   #
   # name: The nix derivation name
   # rawPname: npm package name
@@ -93,9 +93,9 @@ let
 
     in lib.foldl addAttrs packageSet (lib.attrNames packageSet);
 
-  # Resolve peer dependencies to shrinkwrap attribute names
+  # Resolve peer dependencies to pnpmlock attribute names
   #
-  # packageSet: packages from shrinkwrap.yaml
+  # packageSet: packages from pnpmlock.yaml
   resolvePackagePeerDependencies = packageSet: let
 
       # Resolve a single pname+versionSpec from graph
@@ -129,14 +129,14 @@ let
 
     in lib.foldl rewriteAttrSet packageSet (lib.attrNames packageSet);
 
-  # Find the attribute name for a shrinkwrap package
+  # Find the attribute name for a pnpmlock package
   findAttrName = attrSet: depName: depVersion: let
     slashed = "/${depName}/${depVersion}";
   in if (lib.hasAttr slashed attrSet) then slashed else depVersion;
 
-  # Resolve dependencies to shrinkwrap attribute names
+  # Resolve dependencies to pnpmlock attribute names
   #
-  # packageSet: packages from shrinkwrap.yaml
+  # packageSet: packages from pnpmlock.yaml
   resolvePackageDependencies = packageSet: let
 
       rewriteAttrSet = (acc: pkgAttr: acc // (let
@@ -167,20 +167,20 @@ let
 
     in lib.foldl rewriteAttrSet packageSet (lib.attrNames packageSet);
 
-  # Resolve top-level dependencies to shrinkwrap attribute names
+  # Resolve top-level dependencies to pnpmlock attribute names
   #
-  # packageSet: packages from shrinkwrap.yaml
-  resolveDependencies = shrinkwrap: let
-      packageSet = shrinkwrap.packages;
+  # packageSet: packages from pnpmlock.yaml
+  resolveDependencies = pnpmlock: let
+      packageSet = pnpmlock.packages;
 
       rewriteAttrs = attr: let
-        attrSet = if (lib.hasAttr attr shrinkwrap && shrinkwrap."${attr}" != null)
-          then shrinkwrap."${attr}"
+        attrSet = if (lib.hasAttr attr pnpmlock && pnpmlock."${attr}" != null)
+          then pnpmlock."${attr}"
           else {};
       in lib.mapAttrsToList (depName: depVersion:
         (findAttrName packageSet depName depVersion)) attrSet;
 
-    in shrinkwrap // {
+    in pnpmlock // {
       dependencies = rewriteAttrs "dependencies";
       devDependencies = rewriteAttrs "devDependencies";
       optionalDependencies = rewriteAttrs "optionalDependencies";
@@ -190,7 +190,7 @@ let
   breakCircular = dependencyAttributes: packageSet: let
 
     # Local (link:) dependencies are different in that they are treated at separate nix derivations
-    # and they are not present in the shrinkwrap (acc attribute)
+    # and they are not present in the pnpmlock (acc attribute)
     #
     # Filter them out and let each sub-derivation deal with circular dependencies on their own
     nonLocalDependencyAttrs = builtins.filter (a: !(lib.hasPrefix "link:" a)) dependencyAttributes;
@@ -201,7 +201,7 @@ let
       hasDeps = lib.length entry.dependencies > 0;
       deps = entry.dependencies;
 
-      # Detect cycles by seeing if the exact shrinkwrap package
+      # Detect cycles by seeing if the exact pnpmlock package
       # has already been visited
       hasCycle = lib.elem pkgAttr visitStack;
 
@@ -245,30 +245,37 @@ let
   in lib.foldl (acc: attrName: acc //
     (walkGraph attrName [] acc)) packageSet nonLocalDependencyAttrs;
 
-  rewriteGraph = shrinkwrap: lib.foldl (acc: fn: fn acc) shrinkwrap [
+  # force reindent (TODO: Remove me)
+  rewriteGraph = pnpmlock: lib.foldl (acc: fn: fn acc) pnpmlock [
+
+    # Recursive workspaces are currently unsupported
+    (pnpmlock: (
+      if lib.hasAttr "importers" pnpmlock
+      then (throw "Workspaces currently unsupported. This is a regression from pnpm 2.x.")
+      else pnpmlock))
 
     # A bare bones project might not have the packages attribute
-    (shrinkwrap: shrinkwrap // {
-      packages = if (lib.hasAttr "packages" shrinkwrap) then shrinkwrap.packages else {};
+    (pnpmlock: pnpmlock // {
+      packages = if (lib.hasAttr "packages" pnpmlock) then pnpmlock.packages else {};
     })
 
     # Inject pname, version etc attributes
-    (shrinkwrap: shrinkwrap // {
-      packages = injectNameVersionAttrs shrinkwrap.packages;
+    (pnpmlock: pnpmlock // {
+      packages = injectNameVersionAttrs pnpmlock.packages;
     })
 
     # Resolve all peer dependencies to attribute names
-    (shrinkwrap: shrinkwrap // {
-      packages = resolvePackagePeerDependencies shrinkwrap.packages;
+    (pnpmlock: pnpmlock // {
+      packages = resolvePackagePeerDependencies pnpmlock.packages;
     })
 
     # Resolve all dependencies to attribute names
-    (shrinkwrap: shrinkwrap // {
-      packages = resolvePackageDependencies shrinkwrap.packages;
+    (pnpmlock: pnpmlock // {
+      packages = resolvePackageDependencies pnpmlock.packages;
     })
 
     # Resolve all top-level dependencies (dependencies & devDependencies)
-    (shrinkwrap: resolveDependencies shrinkwrap)
+    (pnpmlock: resolveDependencies pnpmlock)
 
     # Lets play break the cycle!
     # npm allows for circular dependencies (insanity)
@@ -278,17 +285,17 @@ let
     #
     # In a single-package context circular can be achieved without causing
     # infinite recursion
-    (shrinkwrap: shrinkwrap // (let
+    (pnpmlock: pnpmlock // (let
       # Avoid unnecessary processing by walking from root out to the leaf(s)
       #
       # TODO: Dont include devDependencies and optionalDependencies unconditionally
       # We could easily optimise this away by only walking if they are included
-      dependencyAttributes = lib.unique (shrinkwrap.dependencies
-        ++ shrinkwrap.devDependencies
-        ++ shrinkwrap.optionalDependencies);
+      dependencyAttributes = lib.unique (pnpmlock.dependencies
+        ++ pnpmlock.devDependencies
+        ++ pnpmlock.optionalDependencies);
     in {
-      packages = breakCircular dependencyAttributes shrinkwrap.packages;
+      packages = breakCircular dependencyAttributes pnpmlock.packages;
     }))
   ];
 
-in (shrinkwrapYAML: rewriteGraph shrinkwrapYAML)
+in (pnpmlockYAML: rewriteGraph pnpmlockYAML)

@@ -121,9 +121,9 @@ lib.listToAttrs (map (drv: nameValuePair drv.name drv) [
     ${test-scoped}/bin/test-scoped
   '')
 
-  # Test pnpm workspace recursive linked packages
-  (mkTest "test-recursive-link" ''
-    ${test-recursive-link}/bin/test-recursive-link
-  '')
+  # # Test pnpm workspace recursive linked packages
+  # (mkTest "test-recursive-link" ''
+  #   ${test-recursive-link}/bin/test-recursive-link
+  # '')
 
 ])

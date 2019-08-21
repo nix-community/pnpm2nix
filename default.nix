@@ -145,17 +145,18 @@ in {
       shaType = lib.elemAt integrity 0;
       shaSum = lib.elemAt integrity 1;
       tarball = (lib.lists.last (lib.splitString "/" pkgInfo.pname)) + "-" + pkgInfo.version + ".tgz";
+      url = if (lib.hasAttr "tarball" pkgInfo.resolution)
+        then pkgInfo.resolution.tarball
+        else "${shrinkwrap.registry}${pkgInfo.pname}/-/${tarball}";
       src = (if (lib.hasAttr "integrity" pkgInfo.resolution) then
         (pkgs.fetchurl {
-          url = if (lib.hasAttr "tarball" pkgInfo.resolution)
-            then pkgInfo.resolution.tarball
-            else "${shrinkwrap.registry}${pkgInfo.pname}/-/${tarball}";
-            "${shaType}" = shaSum;
+          url = url;
+          "${shaType}" = shaSum;
         }) else if allowImpure then fetchTarball {
           # Note: Resolved tarballs(github revs for example)
           # does not yet have checksums
           # https://github.com/pnpm/pnpm/issues/1035
-          url = pkgInfo.resolution.tarball;
+          url = url;
         } else throw "No download method found for package ${pkgInfo.name}, consider adding `allowImpure = true;`");
     in wrapRawSrc src pkgInfo.pname;
 

@@ -2,6 +2,8 @@
 , nodejs ? pkgs.nodejs-8_x
 , nodePackages ? pkgs.nodePackages_8_x
 , node-gyp ? nodePackages.node-gyp
+, fetchurl ? pkgs.fetchurl
+, fetchTarball ? builtins.fetchTarball
 } @modArgs:
 
 # Scope mkPnpmDerivation
@@ -149,7 +151,7 @@ in {
         then pkgInfo.resolution.tarball
         else "${shrinkwrap.registry}${pkgInfo.pname}/-/${tarball}";
       src = (if (lib.hasAttr "integrity" pkgInfo.resolution) then
-        (pkgs.fetchurl {
+        (fetchurl {
           url = url;
           "${shaType}" = shaSum;
         }) else if allowImpure then fetchTarball {

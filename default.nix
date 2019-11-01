@@ -132,6 +132,17 @@ in {
     in {
       name = "pnpm2nix-source-${name}";
       inherit src;
+
+      # Make dirty tars work
+      TAR_OPTIONS = "--delay-directory-restore";
+      # We're still making them writable, but we need to run something else first
+      dontMakeSourcesWritable = true;
+      # Make directories have +x and everything writable
+      postUnpack = ''
+        find . -type d -exec chmod u+x {} \;
+        chmod -R u+w -- "$sourceRoot"
+      '';
+
       dontBuild = true;
       configurePhase = ":";
       fixupPhase = ":";

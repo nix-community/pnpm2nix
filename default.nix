@@ -139,7 +139,7 @@ in {
       dontMakeSourcesWritable = true;
       # Make directories have +x and everything writable
       postUnpack = ''
-        find . -type d -exec chmod u+x {} \;
+        find "$sourceRoot" -type d -exec chmod u+x {} \;
         chmod -R u+w -- "$sourceRoot"
       '';
 

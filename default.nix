@@ -163,7 +163,10 @@ in {
             then pkgInfo.resolution.tarball
             else "${registry}${pkgInfo.pname}/-/${tarball}";
             "${shaType}" = shaSum;
-        }) else if allowImpure then fetchTarball {
+        }) else if (lib.hasAttr "commit" pkgInfo.resolution) then builtins.fetchGit {
+          url = pkgInfo.resolution.repo;
+          rev = pkgInfo.resolution.commit;
+        } else if allowImpure then fetchTarball {
           # Note: Resolved tarballs(github revs for example)
           # does not yet have checksums
           # https://github.com/pnpm/pnpm/issues/1035
@@ -195,7 +198,7 @@ in {
       };
 
   in
-    assert pnpmlock.lockfileVersion == 5;
+    assert (pnpmlock.lockfileVersion == 5 || pnpmlock.lockfileVersion == 5.1);
   (mkPnpmDerivation {
     deps = (builtins.map
       (attrName: packages."${attrName}")

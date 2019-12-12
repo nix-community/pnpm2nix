@@ -66,7 +66,7 @@ in {
     sourceRoot = ".";
     postUnpack = ''
       mkdir -p node_modules
-      mv pnpm2nix-source-*/* node_modules/
+      cp -R pnpm2nix-source-*/* node_modules/
       rm -r pnpm2nix-source-*
     '';
 
@@ -77,9 +77,10 @@ in {
           if test ! -L "$module"; then
             # Check for nested directories (npm calls this scopes)
             if test "$(echo "$module" | grep -o '@')" = '@'; then
-              outdir=$(dirname node_modules/${dep.pname})
+              scope=$(echo "${dep.pname}" | cut -d/ -f 1)
+              outdir=node_modules/$scope
               mkdir -p "$outdir"
-              ln -s "$module" $outdir/$(basename "$module")
+              ln -sf "$module" "$outdir"
             else
               ln -s "$module" node_modules/$(basename "$module")
             fi

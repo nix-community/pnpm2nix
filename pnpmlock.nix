@@ -214,9 +214,9 @@ let
       #
       # The list is sorted to provide the exact same ordering no matter
       # where the cycle was entered
-      cycleConstituents = lib.lists.sort (a: b: a < b) (if hasCycle then
+      cycleConstituents = lib.unique (lib.lists.sort (a: b: a < b) (if hasCycle then
         (lib.lists.sublist cycleIndex (lib.lists.length visitStack) visitStack)
-        else [ pkgAttr ]);
+        else [ pkgAttr ]));
 
       # Modify the accumulator with constituents
       #
@@ -228,7 +228,7 @@ let
         dependencies = lib.filter (depAttr: !(lib.elem depAttr cycleConstituents)) constituentDeps;
       in {
         "${attrName}" = (constituent // {
-          constituents = cycleConstituents;
+          constituents = lib.unique ((if builtins.hasAttr "constituents" constituent then constituent.constituents else []) ++ cycleConstituents);
           inherit dependencies;
         });
       }))) acc cycleConstituents;

@@ -82,7 +82,7 @@ in {
               mkdir -p "$outdir"
               ln -sf "$module" "$outdir"
             else
-              ln -s "$module" node_modules/$(basename "$module")
+              ln -sf "$module" node_modules/ || :
             fi
           fi
         done

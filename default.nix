@@ -179,7 +179,7 @@ in {
 
       # These attrs have already been created in pre-processing
       # Cyclic dependencies has deterministic ordering so they will end up with the exact same attributes
-      name = lib.concatStringsSep "-" (builtins.map (attr: pnpmlock.packages."${attr}".name) pkgInfo.constituents);
+      name = builtins.substring 0 207 (lib.concatStringsSep "-" (builtins.map (attr: pnpmlock.packages."${attr}".name) pkgInfo.constituents));
       version = if !hasCycle then pkgInfo.version else "cyclic";
       pname = lib.concatStringsSep "-" (builtins.map (attr: pnpmlock.packages."${attr}".pname) pkgInfo.constituents);
 

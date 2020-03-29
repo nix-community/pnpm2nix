@@ -1,4 +1,4 @@
-[[https://travis-ci.org/adisbladis/pnpm2nix][https://travis-ci.org/adisbladis/pnpm2nix.svg?branch=master]]
+[[https://travis-ci.org/nix-community/pnpm2nix][https://travis-ci.org/nix-community/pnpm2nix.svg?branch=master]]
 
 * pnpm2nix
 Loads =pnpm='s shrinkwrap.yaml into nix expressions.

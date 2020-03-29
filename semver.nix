@@ -25,7 +25,7 @@ let
 
     dropWildcardPrecision = f: version: constraint: let
       # TODO: some stricter trailing-wildcard matching
-      wildcardMatch = match "([^0-9x*]*)([0-9]\\.[0-9]\\.[0-9]|[0-9]\\.[0-9]|[0-9])?([.x*]*)" constraint;
+      wildcardMatch = match "([^0-9x*]*)([0-9]+\\.[0-9]+\\.[0-9]+|[0-9]+\\.[0-9]+|[0-9]+)?([.x*]*)" constraint;
       matchPart = (elemAt wildcardMatch 1);
       shortConstraint = if matchPart != null then matchPart else "";
       shortVersion = builtins.substring 0 (builtins.stringLength shortConstraint) version;

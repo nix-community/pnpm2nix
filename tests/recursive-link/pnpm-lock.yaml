@@ -1,16 +1,20 @@
+lockfileVersion: '6.0'
+
 importers:
+
   packages/a:
     dependencies:
-      b: 'link:../b'
-      c: 'link:../c'
-    specifiers:
-      b: 1.0.0
-      c: 1.0.0
+      b:
+        specifier: 1.0.0
+        version: link:../b
+      c:
+        specifier: 1.0.0
+        version: link:../c
+
   packages/b:
     dependencies:
-      c: 'link:../c'
-    specifiers:
-      c: 1.0.0
-  packages/c:
-    specifiers: {}
-lockfileVersion: 5
+      c:
+        specifier: 1.0.0
+        version: link:../c
+
+  packages/c: {}

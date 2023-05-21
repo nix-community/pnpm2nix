@@ -1,5 +1,6 @@
+lockfileVersion: '6.0'
+
 dependencies:
-  ret-42: 'link:local_modules/ret-42'
-lockfileVersion: 5
-specifiers:
-  ret-42: 'link:local_modules/ret-42'
+  ret-42:
+    specifier: link:local_modules/ret-42
+    version: link:local_modules/ret-42

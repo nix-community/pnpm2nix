@@ -1,8 +1,8 @@
 with (import ((import <nixpkgs> {}).fetchFromGitHub {
-  repo = "nixpkgs-channels";
+  repo = "nixpkgs";
   owner = "NixOS";
-  sha256 = "1bjq5gl08pni6q2nqv9w98ym3kybzf7qc6cx4js0388vg8zfgf2k";
-  rev = "49a16a290e68ebb1ef5acadf25cf149d0d530d05";
+  sha256 = "sha256-IiJ0WWW6OcCrVFl1ijE+gTaP0ChFfV6dNkJR05yStmw=";
+  rev = "eb751d65225ec53de9cf3d88acbf08d275882389";
 }) { });
 with lib.attrsets;
 with lib;
@@ -58,7 +58,7 @@ lib.listToAttrs (map (drv: nameValuePair drv.name drv) [
   (mkTest "impure" "${test-impure}/bin/testapn")
 
   (mkTest "python-lint" ''
-    echo ${(python2.withPackages (ps: [ ps.flake8 ]))}/bin/flake8 ${pnpm2nix}/
+    echo ${(python3.withPackages (ps: [ ps.flake8 ]))}/bin/flake8 ${pnpm2nix}/
   '')
 
   # Check if nested directory structures work properly

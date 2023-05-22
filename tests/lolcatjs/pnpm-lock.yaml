@@ -22,8 +22,8 @@ dependencies:
 
 optionalDependencies:
   sleep:
-    specifier: ^5.0.0
-    version: 5.2.4
+    specifier: ^6.3.0
+    version: 6.3.0
 
 packages:
 
@@ -88,17 +88,17 @@ packages:
       strip-indent: 1.0.1
     dev: false
 
-  /nan@2.14.0:
-    resolution: {integrity: sha512-INOFj37C7k3AfaNTtX8RhsTw7qRy7eLET14cROi9+5HAVbbHuIWUHEauBv5qT4Av2tWasiTY1Jw6puUNqRJXQg==}
+  /nan@2.17.0:
+    resolution: {integrity: sha512-2ZTgtl0nJsO0KQCjEpxcIr5D+Yv90plTitZt9JBfQvVJDS5seMl3FOvsh3+9CoYWXf/1l5OaZzzF6nDm4cagaQ==}
     dev: false
     optional: true
 
-  /sleep@5.2.4:
-    resolution: {integrity: sha512-SoltvxayTifWOgOGD6CTh+djcp5TaOa/zdbaA38wEH1ahF2azmiLOh8CPt6ExHf0pAJAsA9OCHTS7zK24Ym4yA==}
+  /sleep@6.3.0:
+    resolution: {integrity: sha512-+WgYl951qdUlb1iS97UvQ01pkauoBK9ML9I/CMPg41v0Ze4EyMlTgFTDDo32iYj98IYqxIjDMRd+L71lawFfpQ==}
     engines: {node: '>=0.8.0'}
     requiresBuild: true
     dependencies:
-      nan: 2.14.0
+      nan: 2.17.0
     dev: false
     optional: true
 

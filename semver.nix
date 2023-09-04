@@ -112,10 +112,9 @@ let
       operators."${ops.t}" version v;
 
   satisfies = version: constraint:
-  # TODO: use a regex for the split
     builtins.length (
       builtins.filter (c: satisfiesSingle version c)
-        (lib.splitString " || " constraint)
+        (builtins.filter builtins.isString (builtins.split " *\\|\\| *" constraint))
     ) > 0;
 in
 { inherit satisfies; }

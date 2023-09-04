@@ -18,6 +18,7 @@ let
     src = ./.;
     packageJSON = ./package.json;
     pnpmLock = ./pnpm-lock.yaml;
+    linkDevDependencies = true;
   };
 
 in package

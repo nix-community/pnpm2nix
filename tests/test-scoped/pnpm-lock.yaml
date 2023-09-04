@@ -1,45 +1,47 @@
+lockfileVersion: '6.0'
+
 dependencies:
-  '@most/hold': 3.0.1
-lockfileVersion: 5
+  '@most/hold':
+    specifier: ^3.0.0
+    version: 3.0.1
+
 packages:
-  /@most/core/0.13.0:
+
+  /@most/core@0.13.0:
+    resolution: {integrity: sha512-R1hR/B+GGFfmKvILe/1IAnZn5f7/pRiw27Oucxx5+DrSpaR06cE6YHJ1G9KP9GqB/VzM2fidzia+8UsbdsZVxw==}
     dependencies:
       '@most/disposable': 0.13.1
       '@most/prelude': 1.7.3
       '@most/scheduler': 0.13.1
       '@most/types': 0.11.1
     dev: false
-    resolution:
-      integrity: sha512-R1hR/B+GGFfmKvILe/1IAnZn5f7/pRiw27Oucxx5+DrSpaR06cE6YHJ1G9KP9GqB/VzM2fidzia+8UsbdsZVxw==
-  /@most/disposable/0.13.1:
+
+  /@most/disposable@0.13.1:
+    resolution: {integrity: sha512-2Z89nEjdEJ6RvCzwyWZK6xv2avt2gY2NSkceemOQ869ggGDB2ZFA/ZMuyZag2KVoCyjb9zMOhfOgQw1gD/m9QA==}
     dependencies:
       '@most/prelude': 1.7.3
       '@most/types': 0.11.1
     dev: false
-    resolution:
-      integrity: sha512-2Z89nEjdEJ6RvCzwyWZK6xv2avt2gY2NSkceemOQ869ggGDB2ZFA/ZMuyZag2KVoCyjb9zMOhfOgQw1gD/m9QA==
-  /@most/hold/3.0.1:
+
+  /@most/hold@3.0.1:
+    resolution: {integrity: sha512-o2Jqb9A00a1iVDRBvGFFbqbnRePkgt700Vx2/AIRPJYn00PkHqR4N+op7kCyQN7Hl4Mhd90rGKWmFrEXAxuEWA==}
     dependencies:
       '@most/core': 0.13.0
       '@most/scheduler': 0.13.1
       '@most/types': 0.11.1
     dev: false
-    resolution:
-      integrity: sha512-o2Jqb9A00a1iVDRBvGFFbqbnRePkgt700Vx2/AIRPJYn00PkHqR4N+op7kCyQN7Hl4Mhd90rGKWmFrEXAxuEWA==
-  /@most/prelude/1.7.3:
+
+  /@most/prelude@1.7.3:
+    resolution: {integrity: sha512-qWWEnA22UP1lzFfKx75XMut6DUUXGRKe7qv2k+Bgs7ju8lwb5RjsZYyQZ+VcsYvHcIavHKzseLlBMLOe2CvUZw==}
     dev: false
-    resolution:
-      integrity: sha512-qWWEnA22UP1lzFfKx75XMut6DUUXGRKe7qv2k+Bgs7ju8lwb5RjsZYyQZ+VcsYvHcIavHKzseLlBMLOe2CvUZw==
-  /@most/scheduler/0.13.1:
+
+  /@most/scheduler@0.13.1:
+    resolution: {integrity: sha512-t14TLvEfUYPSLJQSLT/V5bQYxvKdLib8KFrz0hniOHZRoqyBgt6zhHKP1zywrEYQd9+sdhS5SZDnX9wAJ+xJxg==}
     dependencies:
       '@most/prelude': 1.7.3
       '@most/types': 0.11.1
     dev: false
-    resolution:
-      integrity: sha512-t14TLvEfUYPSLJQSLT/V5bQYxvKdLib8KFrz0hniOHZRoqyBgt6zhHKP1zywrEYQd9+sdhS5SZDnX9wAJ+xJxg==
-  /@most/types/0.11.1:
+
+  /@most/types@0.11.1:
+    resolution: {integrity: sha512-acP+xy7F4W50GAbpOmfdNgATPwCfMUSLmWEhUb4MHli9k0qAtN828LTVPgK3AsTBh/Fkx0TulbgW+H2t06BsKA==}
     dev: false
-    resolution:
-      integrity: sha512-acP+xy7F4W50GAbpOmfdNgATPwCfMUSLmWEhUb4MHli9k0qAtN828LTVPgK3AsTBh/Fkx0TulbgW+H2t06BsKA==
-specifiers:
-  '@most/hold': ^3.0.0

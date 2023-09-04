@@ -1,10 +1,12 @@
+lockfileVersion: '6.0'
+
 dependencies:
-  async-lock: 1.2.0
-lockfileVersion: 5
+  async-lock:
+    specifier: ^1.1.3
+    version: 1.2.0
+
 packages:
-  /async-lock/1.2.0:
+
+  /async-lock@1.2.0:
+    resolution: {integrity: sha512-81HzTQm4+qMj6PwNlnR+y9g7pDdGGzd/YBUrQnHk+BhR28ja2qv497NkQQc1KcKEqh/RShm07di2b0cIWVFrNQ==}
     dev: false
-    resolution:
-      integrity: sha512-81HzTQm4+qMj6PwNlnR+y9g7pDdGGzd/YBUrQnHk+BhR28ja2qv497NkQQc1KcKEqh/RShm07di2b0cIWVFrNQ==
-specifiers:
-  async-lock: ^1.1.3

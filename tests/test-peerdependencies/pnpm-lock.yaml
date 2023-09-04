@@ -1,47 +1,54 @@
+lockfileVersion: '6.0'
+
 dependencies:
-  winston: 2.4.4
-  winston-logstash: 0.4.0
-lockfileVersion: 5
+  winston:
+    specifier: ^2.4.0
+    version: 2.4.4
+  winston-logstash:
+    specifier: ^0.4.0
+    version: 0.4.0(winston@2.4.4)
+
 packages:
-  /async/1.0.0:
+
+  /async@1.0.0:
+    resolution: {integrity: sha1-+PwEyjoTeErenhZBr5hXjPvWR6k=}
     dev: false
-    resolution:
-      integrity: sha1-+PwEyjoTeErenhZBr5hXjPvWR6k=
-  /colors/1.0.3:
+
+  /colors@1.0.3:
+    resolution: {integrity: sha1-BDP0TYCWgP3rYO0mDxsMJi6CpAs=}
+    engines: {node: '>=0.1.90'}
     dev: false
-    engines:
-      node: '>=0.1.90'
-    resolution:
-      integrity: sha1-BDP0TYCWgP3rYO0mDxsMJi6CpAs=
-  /cycle/1.0.3:
+
+  /cycle@1.0.3:
+    resolution: {integrity: sha1-IegLK+hYD5i0aPN5QwZisEbDStI=}
+    engines: {node: '>=0.4.0'}
     dev: false
-    engines:
-      node: '>=0.4.0'
-    resolution:
-      integrity: sha1-IegLK+hYD5i0aPN5QwZisEbDStI=
-  /eyes/0.1.8:
+
+  /eyes@0.1.8:
+    resolution: {integrity: sha1-Ys8SAjTGg3hdkCNIqADvPgzCC8A=}
+    engines: {node: '> 0.1.90'}
     dev: false
-    engines:
-      node: '> 0.1.90'
-    resolution:
-      integrity: sha1-Ys8SAjTGg3hdkCNIqADvPgzCC8A=
-  /isstream/0.1.2:
+
+  /isstream@0.1.2:
+    resolution: {integrity: sha1-R+Y/evVa+m+S4VAOaQ64uFKcCZo=}
     dev: false
-    resolution:
-      integrity: sha1-R+Y/evVa+m+S4VAOaQ64uFKcCZo=
-  /stack-trace/0.0.10:
+
+  /stack-trace@0.0.10:
+    resolution: {integrity: sha1-VHxws0fo0ytOEI6hoqFZ5f3eGcA=}
     dev: false
-    resolution:
-      integrity: sha1-VHxws0fo0ytOEI6hoqFZ5f3eGcA=
-  /winston-logstash/0.4.0:
-    dev: false
-    engines:
-      node: '>=4'
+
+  /winston-logstash@0.4.0(winston@2.4.4):
+    resolution: {integrity: sha512-P31aKNVlgPWBWH5Q1mpa/S871bzofFF708FwjncU4vhxXfSJCVFC48yEk/iBgXCK4OlZkXtBxzRPEE+3dAdbEA==}
+    engines: {node: '>=4'}
     peerDependencies:
       winston: '>=0.7.3'
-    resolution:
-      integrity: sha512-P31aKNVlgPWBWH5Q1mpa/S871bzofFF708FwjncU4vhxXfSJCVFC48yEk/iBgXCK4OlZkXtBxzRPEE+3dAdbEA==
-  /winston/2.4.4:
+    dependencies:
+      winston: 2.4.4
+    dev: false
+
+  /winston@2.4.4:
+    resolution: {integrity: sha512-NBo2Pepn4hK4V01UfcWcDlmiVTs7VTB1h7bgnB0rgP146bYhMxX0ypCz3lBOfNxCO4Zuek7yeT+y/zM1OfMw4Q==}
+    engines: {node: '>= 0.10.0'}
     dependencies:
       async: 1.0.0
       colors: 1.0.3
@@ -50,10 +57,3 @@ packages:
       isstream: 0.1.2
       stack-trace: 0.0.10
     dev: false
-    engines:
-      node: '>= 0.10.0'
-    resolution:
-      integrity: sha512-NBo2Pepn4hK4V01UfcWcDlmiVTs7VTB1h7bgnB0rgP146bYhMxX0ypCz3lBOfNxCO4Zuek7yeT+y/zM1OfMw4Q==
-specifiers:
-  winston: ^2.4.0
-  winston-logstash: ^0.4.0

@@ -74,13 +74,13 @@ let
   injectNameVersionAttrs = packageSet: let
 
       getDrvVersionAttr = pkgAttr: (lib.elemAt
-        (builtins.match ".*/([0-9][A-Za-z\.0-9\.\-]+).*" pkgAttr) 0);
+        (builtins.match "[^(]*@([0-9][A-Za-z\.0-9\.\-]+).*" pkgAttr) 0);
 
       addAttrs = (acc: pkgAttr: acc // (let
         pkg = acc."${pkgAttr}";
       in {
         "${pkgAttr}" = (pkg // rec {
-          rawPname = lib.elemAt (builtins.match "/?(.+)/[0-9].*" pkgAttr) 0;
+          rawPname = lib.elemAt (builtins.match "/?([^(]+)@[0-9].*" pkgAttr) 0;
           pname = if (lib.hasAttr "name" pkg)
             then pkg.name
             else rawPname;
@@ -131,7 +131,7 @@ let
 
   # Find the attribute name for a pnpmlock package
   findAttrName = attrSet: depName: depVersion: let
-    slashed = "/${depName}/${depVersion}";
+    slashed = "/${depName}@${depVersion}";
   in if (lib.hasAttr slashed attrSet) then slashed else depVersion;
 
   # Resolve dependencies to pnpmlock attribute names
@@ -177,8 +177,8 @@ let
         attrSet = if (lib.hasAttr attr pnpmlock && pnpmlock."${attr}" != null)
           then pnpmlock."${attr}"
           else {};
-      in lib.mapAttrsToList (depName: depVersion:
-        (findAttrName packageSet depName depVersion)) attrSet;
+      in lib.mapAttrsToList (depName: dep:
+        (findAttrName packageSet depName dep.version)) attrSet;
 
     in pnpmlock // {
       dependencies = rewriteAttrs "dependencies";

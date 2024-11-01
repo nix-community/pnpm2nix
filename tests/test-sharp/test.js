@@ -12,7 +12,7 @@ const roundedCorners = new Buffer(
 const roundedCornerResizer =
       sharp()
       .resize(200, 200)
-      .overlayWith(roundedCorners, { cutout: true })
+      .composite([{ input: roundedCorners, blend: 'clear' }])
       .png();
 
 

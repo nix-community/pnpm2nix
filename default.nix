@@ -1,6 +1,6 @@
 { pkgs ? import <nixpkgs> {}
-, nodejs ? pkgs.nodejs-8_x
-, nodePackages ? pkgs.nodePackages_8_x
+, nodejs ? pkgs.nodejs
+, nodePackages ? pkgs.nodePackages
 , node-gyp ? nodePackages.node-gyp
 } @modArgs:
 
@@ -198,7 +198,7 @@ in {
       };
 
   in
-    assert (pnpmlock.lockfileVersion == 5 || pnpmlock.lockfileVersion == 5.1);
+    assert pnpmlock.lockfileVersion == "6.0";
   (mkPnpmDerivation {
     deps = (builtins.map
       (attrName: packages."${attrName}")

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import itertools
 import argparse
 import os.path
@@ -21,7 +21,7 @@ def get_bin_attr_files(package_json):
     except KeyError:
         return tuple()
     else:
-        if isinstance(bins, basestring):
+        if isinstance(bins, str):
             return ((package_json['name'], bins),)
         else:
             return bins.items()
@@ -55,9 +55,6 @@ if __name__ == '__main__':
             args.bin_out, args.lib_out, itertools.chain(
                 get_bin_attr_files(package_json),
                 get_directories_bin_attr_files(args.lib_out, package_json))):
-
-        fin = fin.encode("utf-8");
-        fout = fout.encode("utf-8");
 
         os.symlink(fin, fout)
         os.chmod(fout, 0o755)

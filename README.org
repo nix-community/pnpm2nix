@@ -1,5 +1,9 @@
 [[https://travis-ci.org/nix-community/pnpm2nix][https://travis-ci.org/nix-community/pnpm2nix.svg?branch=master]]
 
+*Status: Unmaintained, only compatible with lockfile version 5.0 or below (latest is 9.0 at the time of writing)*
+
+If you would like to take over this project, or it's name with a new project open a discussion at https://github.com/orgs/nix-community/discussions.
+
 * pnpm2nix
 Loads =pnpm='s shrinkwrap.yaml into nix expressions.
 
